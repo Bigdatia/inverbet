@@ -1,8 +1,11 @@
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, TrendingUp, Bell } from "lucide-react";
 
 const HeroSection = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
       {/* Background glow effects */}
@@ -52,6 +55,7 @@ const HeroSection = () => {
             >
               <Button
                 size="lg"
+                onClick={() => navigate("/auth")}
                 className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-lg px-8 py-6 glow-green-strong group"
               >
                 ACCEDER AL SCANNER AHORA

@@ -1,7 +1,10 @@
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 const Navbar = () => {
+  const navigate = useNavigate();
+
   return (
     <motion.nav
       initial={{ y: -100 }}
@@ -34,11 +37,15 @@ const Navbar = () => {
         <div className="flex items-center gap-3">
           <Button
             variant="outline"
+            onClick={() => navigate("/auth")}
             className="hidden sm:flex border-foreground/20 text-foreground hover:bg-foreground/10 hover:text-foreground font-medium"
           >
             Iniciar Sesión
           </Button>
-          <Button className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold glow-green">
+          <Button
+            onClick={() => navigate("/auth")}
+            className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold glow-green"
+          >
             Comenzar Prueba
           </Button>
         </div>
