@@ -18,15 +18,7 @@ const Navbar = () => {
           <img src="/logotipo.png" alt="Inverbet Logo" className="h-10 w-auto object-contain" />
         </div>
 
-        {/* Center Link */}
-        <div className="hidden md:flex items-center">
-          <a
-            href="#academy"
-            className="text-muted-foreground hover:text-foreground transition-colors font-medium"
-          >
-            Academy
-          </a>
-        </div>
+
 
         {/* CTA Buttons */}
         <div className="flex items-center gap-3">
