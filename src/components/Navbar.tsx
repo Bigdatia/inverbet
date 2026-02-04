@@ -15,12 +15,7 @@ const Navbar = () => {
       <div className="container mx-auto px-6 py-4 flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <span className="font-display text-primary-foreground text-sm font-bold">I</span>
-          </div>
-          <span className="font-display text-xl font-bold tracking-wider text-foreground">
-            INVERBET
-          </span>
+          <img src="/logotipo.png" alt="Inverbet Logo" className="h-10 w-auto object-contain" />
         </div>
 
         {/* Center Link */}

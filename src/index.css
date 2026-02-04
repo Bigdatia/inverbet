@@ -1,8 +1,8 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Orbitron:wght@500;600;700;800;900&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Orbitron:wght@500;600;700;800;900&display=swap');
 
 /* Inverbet Design System - Fintech Dark Theme */
 
@@ -44,13 +44,29 @@
     --tech-purple: 261 100% 60%;
     --deep-black: 0 0% 2%;
     --dark-gray: 0 0% 7%;
-    
+
     /* Gradients */
-    --gradient-dark: linear-gradient(180deg, hsl(0 0% 2%) 0%, hsl(0 0% 5%) 100%);
-    --gradient-card: linear-gradient(135deg, hsl(0 0% 8%) 0%, hsl(0 0% 4%) 100%);
-    --gradient-neon: linear-gradient(135deg, hsl(78 95% 70%) 0%, hsl(100 80% 50%) 100%);
-    --gradient-glow: radial-gradient(ellipse at center, hsl(78 95% 70% / 0.15) 0%, transparent 70%);
-    
+    --gradient-dark: linear-gradient(
+      180deg,
+      hsl(0 0% 2%) 0%,
+      hsl(0 0% 5%) 100%
+    );
+    --gradient-card: linear-gradient(
+      135deg,
+      hsl(0 0% 8%) 0%,
+      hsl(0 0% 4%) 100%
+    );
+    --gradient-neon: linear-gradient(
+      135deg,
+      hsl(78 95% 70%) 0%,
+      hsl(100 80% 50%) 100%
+    );
+    --gradient-glow: radial-gradient(
+      ellipse at center,
+      hsl(78 95% 70% / 0.15) 0%,
+      transparent 70%
+    );
+
     /* Shadows */
     --shadow-neon: 0 0 30px hsl(78 95% 70% / 0.3);
     --shadow-neon-strong: 0 0 60px hsl(78 95% 70% / 0.5);
@@ -96,11 +112,16 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: "Inter", system-ui, sans-serif;
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Orbitron', sans-serif;
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Orbitron", sans-serif;
     font-weight: 700;
     letter-spacing: -0.02em;
   }
@@ -109,15 +130,23 @@
 @layer components {
   .text-gradient-neon {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(78 95% 70%) 0%, hsl(100 80% 60%) 100%);
+    background-image: linear-gradient(
+      135deg,
+      hsl(78 95% 70%) 0%,
+      hsl(100 80% 60%) 100%
+    );
   }
 
   .glow-green {
-    box-shadow: 0 0 30px hsl(78 95% 70% / 0.3), 0 0 60px hsl(78 95% 70% / 0.1);
+    box-shadow:
+      0 0 30px hsl(78 95% 70% / 0.3),
+      0 0 60px hsl(78 95% 70% / 0.1);
   }
 
   .glow-green-strong {
-    box-shadow: 0 0 40px hsl(78 95% 70% / 0.5), 0 0 80px hsl(78 95% 70% / 0.2);
+    box-shadow:
+      0 0 40px hsl(78 95% 70% / 0.5),
+      0 0 80px hsl(78 95% 70% / 0.2);
   }
 
   .glow-purple {
@@ -131,11 +160,16 @@
   }
 
   .border-glow-animated::before {
-    content: '';
+    content: "";
     position: absolute;
     inset: -2px;
     border-radius: calc(var(--radius) + 2px);
-    background: linear-gradient(135deg, hsl(78 95% 70%), hsl(261 100% 60%), hsl(78 95% 70%));
+    background: linear-gradient(
+      135deg,
+      hsl(78 95% 70%),
+      hsl(261 100% 60%),
+      hsl(78 95% 70%)
+    );
     background-size: 300% 300%;
     animation: gradient-rotate 4s ease infinite;
     z-index: -1;
@@ -148,25 +182,40 @@
 
 @layer utilities {
   .font-display {
-    font-family: 'Orbitron', sans-serif;
+    font-family: "Orbitron", sans-serif;
   }
 
   .font-body {
-    font-family: 'Inter', sans-serif;
+    font-family: "Inter", sans-serif;
   }
 }
 
 @keyframes gradient-rotate {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-20px); }
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
 }
 
 @keyframes pulse-glow {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
