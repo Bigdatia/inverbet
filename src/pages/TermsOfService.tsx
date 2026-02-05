@@ -1,4 +1,4 @@
-
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -6,6 +6,10 @@ import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
 const TermsOfService = () => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const currentDate = new Date().toLocaleDateString('es-ES', { 
     year: 'numeric', 
     month: 'long', 
