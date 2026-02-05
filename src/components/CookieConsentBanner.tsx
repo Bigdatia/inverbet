@@ -36,7 +36,7 @@ const CookieConsentBanner = () => {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: "100%", opacity: 0 }}
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="fixed bottom-0 left-0 right-0 z-50 bg-[#050505] border-t border-primary/20"
+          className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-primary/20"
         >
           <div className="container mx-auto px-4 py-4">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
