@@ -1,9 +1,11 @@
 import { motion } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useCheckout } from "@/context/CheckoutContext";
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const { openCheckout } = useCheckout();
 
   return (
     <motion.nav
@@ -30,10 +32,10 @@ const Navbar = () => {
             Iniciar Sesión
           </Button>
           <Button
-            onClick={() => navigate("/auth")}
+            onClick={openCheckout}
             className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold glow-green"
           >
-            Comenzar Prueba
+            Suscríbete
           </Button>
         </div>
       </div>
