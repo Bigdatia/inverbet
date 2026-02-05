@@ -66,21 +66,16 @@ const DashboardLayout = () => {
   const userName = user?.email?.split("@")[0] || "Usuario";
 
   return (
-    <div className="min-h-screen bg-black flex">
+    <div className="h-screen bg-black flex overflow-hidden">
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex flex-col w-64 bg-black border-r border-border/50 p-4">
+      <aside className="hidden lg:flex flex-col w-64 bg-black border-r border-border/50 p-4 h-full shrink-0">
         {/* Logo */}
         <div className="flex items-center gap-2 mb-8 px-2">
-          <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center">
-            <span className="font-display text-primary-foreground text-sm font-bold">B</span>
-          </div>
-          <span className="font-display text-lg font-bold tracking-wider text-foreground">
-            INVERBET
-          </span>
+          <img src="/logotipo.png" alt="Inverbet Logo" className="h-8 w-auto object-contain" />
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 space-y-1">
+        <nav className="flex-1 space-y-1 overflow-y-auto custom-scrollbar">
           {menuItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
@@ -110,7 +105,7 @@ const DashboardLayout = () => {
         {/* Logout */}
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-3 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
+          className="flex items-center gap-3 px-3 py-3 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-200 mt-auto"
         >
           <LogOut className="h-5 w-5" />
           <span className="font-medium">Cerrar Sesión</span>
@@ -133,14 +128,11 @@ const DashboardLayout = () => {
         initial={{ x: "-100%" }}
         animate={{ x: sidebarOpen ? 0 : "-100%" }}
         transition={{ type: "spring", damping: 25 }}
-        className="lg:hidden fixed left-0 top-0 bottom-0 w-72 bg-black border-r border-border/50 p-4 z-50"
+        className="lg:hidden fixed left-0 top-0 bottom-0 w-72 bg-black border-r border-border/50 p-4 z-50 h-full overflow-y-auto"
       >
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center">
-              <span className="font-display text-primary-foreground text-sm font-bold">B</span>
-            </div>
-            <span className="font-display text-lg font-bold tracking-wider">INVERBET</span>
+            <img src="/logotipo.png" alt="Inverbet Logo" className="h-8 w-auto object-contain" />
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
@@ -184,7 +176,7 @@ const DashboardLayout = () => {
       </motion.aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex-1 flex flex-col h-full overflow-y-auto relative">
         {/* Header */}
         <header className="sticky top-0 z-30 bg-black/90 backdrop-blur-xl border-b border-border/50 px-4 lg:px-6 py-4">
           <div className="flex items-center justify-between">

@@ -154,12 +154,7 @@ const Auth = () => {
       >
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-            <span className="font-display text-primary-foreground text-lg font-bold">I</span>
-          </div>
-          <span className="font-display text-2xl font-bold tracking-wider">
-            INVERBET
-          </span>
+          <img src="/logotipo.png" alt="Inverbet Logo" className="h-10 w-auto object-contain" />
         </div>
 
         {/* Form Card */}

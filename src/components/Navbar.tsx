@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 const Navbar = () => {
@@ -14,9 +14,9 @@ const Navbar = () => {
     >
       <div className="container mx-auto px-6 py-4 flex items-center justify-between">
         {/* Logo */}
-        <div className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2 cursor-pointer">
           <img src="/logotipo.png" alt="Inverbet Logo" className="h-10 w-auto object-contain" />
-        </div>
+        </Link>
 
 
 

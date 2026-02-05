@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
@@ -14,22 +15,17 @@ const Footer = () => {
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
             {/* Logo */}
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="font-display text-primary-foreground text-sm font-bold">I</span>
-              </div>
-              <span className="font-display text-xl font-bold tracking-wider">
-                INVERBET
-              </span>
+              <img src="/logotipo.png" alt="Inverbet Logo" className="h-6 w-auto object-contain" />
             </div>
 
             {/* Links */}
             <div className="flex flex-wrap items-center justify-center gap-6 text-sm">
-              <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+              <Link to="/terms" className="text-muted-foreground hover:text-foreground transition-colors">
                 Términos de Servicio
-              </a>
-              <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+              </Link>
+              <Link to="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">
                 Política de Privacidad
-              </a>
+              </Link>
               <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
                 Contacto
               </a>
