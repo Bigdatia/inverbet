@@ -50,7 +50,7 @@ const Stats = () => {
         className="flex items-center justify-between"
       >
         <div>
-          <h1 className="font-display text-2xl font-bold">Mis Estadísticas</h1>
+          <h1 className="font-display text-2xl font-bold">Estadísticas</h1>
           <p className="text-muted-foreground">Rendimiento basado en señales seguidas</p>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 bg-secondary rounded-lg">

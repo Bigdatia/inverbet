@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 const menuItems = [
   { icon: Radar, label: "Scanner en Vivo", path: "/dashboard" },
   { icon: GraduationCap, label: "Academy", path: "/dashboard/academy" },
-  { icon: BarChart3, label: "Mis Estadísticas", path: "/dashboard/stats" },
+  { icon: BarChart3, label: "Estadísticas", path: "/dashboard/stats" },
   { icon: UserIcon, label: "Perfil / Pagos", path: "/dashboard/profile" },
 ];
 
