@@ -13,6 +13,7 @@ import Academy from "./pages/dashboard/Academy";
 import Stats from "./pages/dashboard/Stats";
 import Profile from "./pages/dashboard/Profile";
 import NotFound from "./pages/NotFound";
+import CookieConsentBanner from "./components/CookieConsentBanner";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ const App = () => (
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <CookieConsentBanner />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

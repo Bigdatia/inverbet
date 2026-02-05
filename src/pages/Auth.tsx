@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Mail, Lock, ArrowLeft, Loader2 } from "lucide-react";
 import { z } from "zod";
@@ -18,6 +19,8 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [termsError, setTermsError] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -61,6 +64,13 @@ const Auth = () => {
     e.preventDefault();
     
     if (!validate()) return;
+    
+    // Validate terms acceptance for signup
+    if (!isLogin && !acceptedTerms) {
+      setTermsError(true);
+      setTimeout(() => setTermsError(false), 2000);
+      return;
+    }
     
     setLoading(true);
 
@@ -222,6 +232,47 @@ const Auth = () => {
               )}
             </div>
 
+            {/* Terms checkbox - only show on signup */}
+            {!isLogin && (
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  id="terms"
+                  checked={acceptedTerms}
+                  onCheckedChange={(checked) => {
+                    setAcceptedTerms(checked === true);
+                    setTermsError(false);
+                  }}
+                  className="mt-0.5 border-muted-foreground/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                />
+                <label
+                  htmlFor="terms"
+                  className={`text-xs leading-relaxed transition-colors duration-300 ${
+                    termsError 
+                      ? "text-destructive animate-pulse" 
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  He leído y acepto los{" "}
+                  <Link 
+                    to="/terms" 
+                    className="text-primary hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Términos de Servicio
+                  </Link>{" "}
+                  y la{" "}
+                  <Link 
+                    to="/privacy" 
+                    className="text-primary hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Política de Privacidad
+                  </Link>
+                  .
+                </label>
+              </div>
+            )}
+
             <Button
               type="submit"
               disabled={loading}
@@ -245,6 +296,8 @@ const Auth = () => {
                 onClick={() => {
                   setIsLogin(!isLogin);
                   setErrors({});
+                  setAcceptedTerms(false);
+                  setTermsError(false);
                 }}
                 className="text-primary hover:underline font-medium"
               >
