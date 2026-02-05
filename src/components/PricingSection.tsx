@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Zap, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import CheckoutModal from "./CheckoutModal";
 
 const benefits = [
   "Acceso ilimitado al Scanner de Señales 24/7",
@@ -11,6 +13,7 @@ const benefits = [
 ];
 
 const PricingSection = () => {
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   return (
     <section className="py-24 relative overflow-hidden">
       {/* Background effects */}
@@ -85,10 +88,16 @@ const PricingSection = () => {
             {/* CTA Button */}
             <Button
               size="lg"
+              onClick={() => setIsCheckoutOpen(true)}
               className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-lg py-6 glow-green-strong"
             >
-              COMENZAR PRUEBA GRATIS
+              DESBLOQUEAR ACCESO TOTAL
             </Button>
+
+            <CheckoutModal 
+              isOpen={isCheckoutOpen} 
+              onClose={() => setIsCheckoutOpen(false)} 
+            />
 
             {/* Payment Methods */}
             <div className="mt-8 pt-8 border-t border-border">
