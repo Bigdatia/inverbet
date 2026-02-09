@@ -2,22 +2,17 @@ import { motion } from "framer-motion";
 import { Check, Zap, CreditCard, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCheckout } from "@/context/CheckoutContext";
-
-const benefits = [
-  "Acceso ilimitado al Scanner de Señales 24/7",
-  "Inverbet Academy (Curso de Estrategia) INCLUIDO",
-  "Alertas en tiempo real vía app y email",
-  "Soporte prioritario por WhatsApp",
-  "Historial completo de señales y estadísticas",
-];
-
 import { useTRM, formatCurrencyCOP } from "@/hooks/useTRM";
+import { useLanguage } from "@/context/LanguageContext";
 
 const PricingSection = () => {
   const { openCheckout } = useCheckout();
   const { data: trm, isLoading } = useTRM();
+  const { t } = useLanguage();
   const priceUSD = 20;
   const priceCOP = trm ? priceUSD * trm : 0;
+
+  const benefits = t.pricing.benefits;
 
   return (
     <section id="pricing" className="py-24 relative overflow-hidden">
@@ -35,11 +30,11 @@ const PricingSection = () => {
           className="text-center mb-16"
         >
           <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-            Un precio.{" "}
-            <span className="text-gradient-neon">Todo incluido.</span>
+            {t.pricing.title}{" "}
+            <span className="text-gradient-neon">{t.pricing.title_highlight}</span>
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Sin costos ocultos. Sin compromisos a largo plazo. Cancela cuando quieras.
+            {t.pricing.subtitle}
           </p>
         </motion.div>
 
@@ -57,22 +52,22 @@ const PricingSection = () => {
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/20 rounded-full mb-4">
                 <Zap className="h-4 w-4 text-primary" />
                 <span className="text-primary text-sm font-bold uppercase tracking-wider">
-                  Membresía PRO
+                  {t.pricing.badge}
                 </span>
               </div>
 
               <div className="flex flex-col items-center justify-center gap-1">
                 <div className="flex items-baseline gap-2">
                     <span className="text-5xl md:text-6xl font-display font-bold">${priceUSD}</span>
-                    <span className="text-muted-foreground text-lg">USD / mes</span>
+                    <span className="text-muted-foreground text-lg">{t.pricing.per_month}</span>
                 </div>
                 <div className="text-lg font-medium text-primary/80">
-                    {isLoading ? "Cargando TRM..." : `≈ ${formatCurrencyCOP(priceCOP)} COP`}
+                    {isLoading ? t.pricing.loading_trm : `≈ ${formatCurrencyCOP(priceCOP)} COP`}
                 </div>
               </div>
 
               <p className="text-muted-foreground mt-3 text-sm">
-                Acceso inmediato a todo el contenido
+                {t.pricing.access_text}
               </p>
             </div>
 
@@ -101,14 +96,14 @@ const PricingSection = () => {
               onClick={openCheckout}
               className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-lg py-6 glow-green-strong uppercase"
             >
-              SUSCRÍBETE
+              {t.pricing.subscribe_btn}
             </Button>
 
             {/* Payment Methods */}
             <div className="mt-8 pt-8 border-t border-border">
               <div className="flex items-center justify-center gap-2 mb-4">
                 <CreditCard className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Métodos de pago aceptados</span>
+                <span className="text-sm text-muted-foreground">{t.pricing.payment_methods}</span>
               </div>
               <div className="flex items-center justify-center gap-6">
                 {/* Payment icons - simplified monochromatic style */}

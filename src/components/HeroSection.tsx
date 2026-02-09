@@ -2,9 +2,11 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, TrendingUp, Bell } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 const HeroSection = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   return (
     <section className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
@@ -31,20 +33,17 @@ const HeroSection = () => {
             >
               <span className="w-2 h-2 bg-primary rounded-full animate-pulse-glow" />
               <span className="text-sm text-muted-foreground font-medium">
-                Algoritmo en tiempo real
+                {t.hero.badge}
               </span>
             </motion.div>
 
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight mb-6">
-              Deja de Apostar.{" "}
-              <span className="text-gradient-neon">Empieza a Invertir.</span>
+              {t.hero.title_prefix}{" "}
+              <span className="text-gradient-neon">{t.hero.title_highlight}</span>
             </h1>
 
             <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-8 font-body">
-              La primera plataforma que combina{" "}
-              <span className="text-foreground font-medium">Inteligencia de Datos</span> y{" "}
-              <span className="text-foreground font-medium">Gestión de Riesgo Profesional</span>.
-              No es suerte, es matemática.
+              {t.hero.subtitle}
             </p>
 
             <motion.div
@@ -58,7 +57,7 @@ const HeroSection = () => {
                 onClick={() => navigate("/auth")}
                 className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-lg px-8 py-6 glow-green-strong group"
               >
-                ACCEDER AL SCANNER AHORA
+                {t.hero.cta}
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </motion.div>
@@ -72,11 +71,11 @@ const HeroSection = () => {
             >
               <div className="flex items-center gap-2 text-muted-foreground">
                 <TrendingUp className="h-4 w-4 text-primary" />
-                <span className="text-sm">+5,000 usuarios activos</span>
+                <span className="text-sm">{t.hero.active_users}</span>
               </div>
               <div className="h-4 w-px bg-border" />
               <div className="flex items-center gap-2 text-muted-foreground">
-                <span className="text-sm">Tasa de acierto: 78%</span>
+                <span className="text-sm">{t.hero.success_rate}</span>
               </div>
             </motion.div>
           </motion.div>
@@ -106,7 +105,7 @@ const HeroSection = () => {
                     <div className="flex items-center justify-between mb-8">
                       <div>
                         <span className="font-display text-lg font-bold">INVERBET</span>
-                        <p className="text-xs text-muted-foreground">Scanner Pro</p>
+                        <p className="text-xs text-muted-foreground">{t.hero.app_header_subtitle}</p>
                       </div>
                       <div className="w-10 h-10 bg-secondary rounded-full flex items-center justify-center">
                         <Bell className="h-5 w-5 text-primary" />
@@ -122,9 +121,9 @@ const HeroSection = () => {
                     >
                       <div className="flex items-center justify-between mb-3">
                         <span className="text-xs font-medium text-primary uppercase tracking-wider">
-                          🔥 Señal Detectada
+                          🔥 {t.hero.signal_detected}
                         </span>
-                        <span className="text-xs text-muted-foreground">Ahora</span>
+                        <span className="text-xs text-muted-foreground">{t.hero.signal_now}</span>
                       </div>
                       <div className="space-y-2">
                         <p className="font-display font-bold text-lg">Real Madrid vs Barcelona</p>
@@ -138,7 +137,7 @@ const HeroSection = () => {
                           <span className="text-primary font-bold text-lg">85%</span>
                         </div>
                         <span className="text-xs px-3 py-1 bg-primary/20 text-primary rounded-full font-medium">
-                          Alta Confianza
+                          {t.hero.signal_confidence}
                         </span>
                       </div>
                     </motion.div>
@@ -146,8 +145,8 @@ const HeroSection = () => {
                     {/* Secondary Signal */}
                     <div className="bg-secondary/50 border border-border rounded-2xl p-4">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs text-muted-foreground">Señal Pendiente</span>
-                        <span className="text-xs text-muted-foreground">hace 5 min</span>
+                        <span className="text-xs text-muted-foreground">{t.hero.signal_pending}</span>
+                        <span className="text-xs text-muted-foreground">{t.hero.signal_time_ago}</span>
                       </div>
                       <p className="font-medium text-sm">Man City vs Liverpool</p>
                       <div className="mt-2 flex items-center gap-2">

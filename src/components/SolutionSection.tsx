@@ -1,24 +1,25 @@
 import { motion } from "framer-motion";
 import { Scan, GraduationCap, Zap, Shield } from "lucide-react";
-
-const features = [
-  {
-    icon: Scan,
-    title: "El Scanner",
-    description:
-      "Nuestro algoritmo analiza miles de cuotas en tiempo real (API-Football & Odds API) para encontrar errores de mercado invisibles al ojo humano.",
-    color: "primary",
-  },
-  {
-    icon: GraduationCap,
-    title: "La Academy - GRATIS",
-    description:
-      "No solo te damos el pescado. Con tu suscripción, desbloqueas nuestra Estrategia Maestra de Gestión de Capital. Aprende a proteger tu dinero como un profesional.",
-    color: "accent",
-  },
-];
+import { useLanguage } from "@/context/LanguageContext";
 
 const SolutionSection = () => {
+  const { t } = useLanguage();
+
+  const features = [
+    {
+      icon: Scan,
+      title: t.solution.cards[0].title,
+      description: t.solution.cards[0].description,
+      color: "primary",
+    },
+    {
+      icon: GraduationCap,
+      title: t.solution.cards[1].title,
+      description: t.solution.cards[1].description,
+      color: "accent",
+    },
+  ];
+
   return (
     <section className="py-24 relative overflow-hidden">
       {/* Background gradient */}
@@ -35,25 +36,24 @@ const SolutionSection = () => {
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20 mb-6">
               <Zap className="h-4 w-4 text-primary" />
-              <span className="text-sm text-primary font-medium">El Ecosistema Inverbet</span>
+              <span className="text-sm text-primary font-medium">{t.solution.badge}</span>
             </div>
 
             <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold mb-6">
-              Tu{" "}
-              <span className="text-gradient-neon">ventaja injusta</span>{" "}
-              contra las casas de apuestas
+              {t.solution.title_prefix}{" "}
+              <span className="text-gradient-neon">{t.solution.title_highlight}</span>{" "}
+              {t.solution.title_suffix}
             </h2>
 
             <p className="text-muted-foreground text-lg mb-10">
-              Mientras otros apuestan a ciegas, tú tendrás acceso a datos en tiempo real
-              y una estrategia probada para maximizar tus ganancias.
+              {t.solution.subtitle}
             </p>
 
             {/* Features */}
             <div className="space-y-6">
               {features.map((feature, index) => (
                 <motion.div
-                  key={feature.title}
+                  key={index}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
@@ -102,12 +102,12 @@ const SolutionSection = () => {
                 {/* Stats Header */}
                 <div className="flex items-center justify-between mb-8">
                   <div>
-                    <span className="text-muted-foreground text-sm">Rendimiento del Scanner</span>
-                    <h3 className="font-display text-2xl font-bold">Esta Semana</h3>
+                    <span className="text-muted-foreground text-sm">{t.solution.stats.header_subtitle}</span>
+                    <h3 className="font-display text-2xl font-bold">{t.solution.stats.header_title}</h3>
                   </div>
                   <div className="flex items-center gap-2 px-3 py-1 bg-primary/20 rounded-full">
                     <Shield className="h-4 w-4 text-primary" />
-                    <span className="text-primary text-sm font-medium">Verificado</span>
+                    <span className="text-primary text-sm font-medium">{t.solution.stats.verified}</span>
                   </div>
                 </div>
 
@@ -115,19 +115,19 @@ const SolutionSection = () => {
                 <div className="grid grid-cols-2 gap-6 mb-8">
                   <div className="bg-secondary rounded-2xl p-6 text-center">
                     <span className="text-4xl font-display font-bold text-primary">78%</span>
-                    <p className="text-muted-foreground text-sm mt-2">Tasa de Acierto</p>
+                    <p className="text-muted-foreground text-sm mt-2">{t.solution.stats.success_rate}</p>
                   </div>
                   <div className="bg-secondary rounded-2xl p-6 text-center">
                     <span className="text-4xl font-display font-bold text-foreground">156</span>
-                    <p className="text-muted-foreground text-sm mt-2">Señales Emitidas</p>
+                    <p className="text-muted-foreground text-sm mt-2">{t.solution.stats.signals_issued}</p>
                   </div>
                   <div className="bg-secondary rounded-2xl p-6 text-center">
                     <span className="text-4xl font-display font-bold text-foreground">+23%</span>
-                    <p className="text-muted-foreground text-sm mt-2">ROI Promedio</p>
+                    <p className="text-muted-foreground text-sm mt-2">{t.solution.stats.roi_avg}</p>
                   </div>
                   <div className="bg-secondary rounded-2xl p-6 text-center">
                     <span className="text-4xl font-display font-bold text-accent">24/7</span>
-                    <p className="text-muted-foreground text-sm mt-2">Monitoreo</p>
+                    <p className="text-muted-foreground text-sm mt-2">{t.solution.stats.monitoring}</p>
                   </div>
                 </div>
 
@@ -138,7 +138,7 @@ const SolutionSection = () => {
                     <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
                   </span>
                   <span className="text-sm text-muted-foreground">
-                    Scanner activo - Analizando 1,847 partidos
+                    {t.solution.stats.live_indicator}
                   </span>
                 </div>
               </div>

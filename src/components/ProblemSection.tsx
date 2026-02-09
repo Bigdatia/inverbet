@@ -1,25 +1,28 @@
 import { motion } from "framer-motion";
 import { Heart, Target, Calculator } from "lucide-react";
-
-const problems = [
-  {
-    icon: Heart,
-    title: "Emociones vs Razón",
-    description: "Apostar con el corazón destruye tu capital. Las decisiones impulsivas son el enemigo número uno de tu bankroll.",
-  },
-  {
-    icon: Target,
-    title: "Falta de Estrategia",
-    description: "Sin gestión de riesgo, una mala racha te liquida. El 95% de los apostadores no tienen un plan definido.",
-  },
-  {
-    icon: Calculator,
-    title: "Desventaja Matemática",
-    description: "La casa siempre gana... a menos que tengas mejor información. Las cuotas están diseñadas para beneficiar a las casas.",
-  },
-];
+import { useLanguage } from "@/context/LanguageContext";
 
 const ProblemSection = () => {
+  const { t } = useLanguage();
+
+  const problems = [
+    {
+      icon: Heart,
+      title: t.problem.cards[0].title,
+      description: t.problem.cards[0].description,
+    },
+    {
+      icon: Target,
+      title: t.problem.cards[1].title,
+      description: t.problem.cards[1].description,
+    },
+    {
+      icon: Calculator,
+      title: t.problem.cards[2].title,
+      description: t.problem.cards[2].description,
+    },
+  ];
+
   return (
     <section className="py-24 bg-secondary relative overflow-hidden">
       {/* Subtle grid pattern */}
@@ -43,19 +46,19 @@ const ProblemSection = () => {
           className="text-center mb-16"
         >
           <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-            ¿Por qué el{" "}
-            <span className="text-destructive">95%</span>{" "}
-            de los apostadores pierden dinero?
+            {t.problem.title_prefix}{" "}
+            <span className="text-destructive">{t.problem.title_highlight}</span>{" "}
+            {t.problem.title_suffix}
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            La industria de las apuestas está diseñada para que pierdas. Pero hay una forma de cambiar el juego.
+            {t.problem.subtitle}
           </p>
         </motion.div>
 
         <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
           {problems.map((problem, index) => (
             <motion.div
-              key={problem.title}
+              key={index}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}

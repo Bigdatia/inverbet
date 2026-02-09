@@ -1,9 +1,16 @@
 import { motion } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/context/LanguageContext";
+import { Globe } from "lucide-react";
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const { t, language, setLanguage } = useLanguage();
+
+  const toggleLanguage = () => {
+    setLanguage(language === "es" ? "en" : "es");
+  };
 
   return (
     <motion.nav
@@ -22,12 +29,23 @@ const Navbar = () => {
 
         {/* CTA Buttons */}
         <div className="flex items-center gap-3">
+          {/* Language Switcher */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleLanguage}
+            className="hidden sm:flex items-center gap-1 text-muted-foreground hover:text-foreground hover:bg-transparent"
+          >
+            <Globe className="h-4 w-4" />
+            <span className="font-medium">{language.toUpperCase()}</span>
+          </Button>
+
           <Button
             variant="outline"
             onClick={() => navigate("/auth")}
             className="hidden sm:flex border-foreground/20 text-foreground hover:bg-foreground/10 hover:text-foreground font-medium"
           >
-            Iniciar Sesión
+            {t.navbar.login}
           </Button>
           <Button
             onClick={() => {
@@ -44,8 +62,10 @@ const Navbar = () => {
             }}
             className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold glow-green"
           >
-            Suscríbete
+            {t.navbar.subscribe}
           </Button>
+          
+          {/* Mobile Language Switcher (Visible on small screens if needed, strictly asking for desktop mainly but good to have) - simplifying to just desktop as requested "al lado del boton" */}
         </div>
       </div>
     </motion.nav>

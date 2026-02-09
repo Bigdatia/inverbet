@@ -9,9 +9,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Mail, Lock, ArrowLeft, Loader2 } from "lucide-react";
 import { z } from "zod";
+import { useLanguage } from "@/context/LanguageContext";
 
-const emailSchema = z.string().email("Email inválido");
-const passwordSchema = z.string().min(6, "Mínimo 6 caracteres");
+const emailSchema = z.string().email();
+const passwordSchema = z.string().min(6);
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -24,6 +25,7 @@ const Auth = () => {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -46,14 +48,16 @@ const Auth = () => {
   const validate = () => {
     const newErrors: { email?: string; password?: string } = {};
     
+    // Custom validation messages are handled by translating the error keys or setting defaults here.
+    // Zod is schema validation but message can be custom.
     const emailResult = emailSchema.safeParse(email);
     if (!emailResult.success) {
-      newErrors.email = emailResult.error.errors[0].message;
+      newErrors.email = t.auth.errors.invalid_email;
     }
     
     const passwordResult = passwordSchema.safeParse(password);
     if (!passwordResult.success) {
-      newErrors.password = passwordResult.error.errors[0].message;
+      newErrors.password = t.auth.errors.invalid_password;
     }
     
     setErrors(newErrors);
@@ -84,13 +88,13 @@ const Auth = () => {
         if (error) {
           if (error.message.includes("Invalid login credentials")) {
             toast({
-              title: "Error de autenticación",
-              description: "Email o contraseña incorrectos",
+              title: t.auth.errors.auth_error,
+              description: t.auth.errors.auth_error_desc,
               variant: "destructive",
             });
           } else {
             toast({
-              title: "Error",
+              title: t.auth.errors.error_title,
               description: error.message,
               variant: "destructive",
             });
@@ -108,28 +112,28 @@ const Auth = () => {
         if (error) {
           if (error.message.includes("already registered")) {
             toast({
-              title: "Usuario existente",
-              description: "Este email ya está registrado. Intenta iniciar sesión.",
+              title: t.auth.errors.existing_user,
+              description: t.auth.errors.existing_user_desc,
               variant: "destructive",
             });
           } else {
             toast({
-              title: "Error",
+              title: t.auth.errors.error_title,
               description: error.message,
               variant: "destructive",
             });
           }
         } else {
           toast({
-            title: "¡Cuenta creada!",
-            description: "Revisa tu email para confirmar tu cuenta.",
+            title: t.auth.errors.success_created,
+            description: t.auth.errors.check_email,
           });
         }
       }
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: "Algo salió mal. Intenta de nuevo.",
+        title: t.auth.errors.error_title,
+        description: t.auth.errors.something_wrong,
         variant: "destructive",
       });
     } finally {
@@ -153,7 +157,7 @@ const Auth = () => {
         className="absolute top-6 left-6 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft className="h-5 w-5" />
-        <span className="font-medium">Volver</span>
+        <span className="font-medium">{t.auth.back_btn}</span>
       </motion.button>
 
       <motion.div
@@ -171,19 +175,19 @@ const Auth = () => {
         <div className="bg-card border border-border rounded-2xl p-8">
           <div className="text-center mb-8">
             <h1 className="font-display text-2xl font-bold mb-2">
-              {isLogin ? "Bienvenido de vuelta" : "Crea tu cuenta"}
+              {isLogin ? t.auth.welcome_back : t.auth.create_account}
             </h1>
             <p className="text-muted-foreground">
               {isLogin
-                ? "Ingresa a tu cuenta para acceder al Scanner"
-                : "Únete a la comunidad de inversores inteligentes"}
+                ? t.auth.login_subtitle
+                : t.auth.register_subtitle}
             </p>
           </div>
 
           <form onSubmit={handleAuth} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium">
-                Email
+                {t.auth.email_label}
               </Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -192,7 +196,7 @@ const Auth = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="tu@email.com"
+                  placeholder={t.auth.email_label}
                   className="pl-10 h-12 bg-secondary border-border focus:border-primary"
                 />
               </div>
@@ -203,7 +207,7 @@ const Auth = () => {
 
             <div className="space-y-2">
               <Label htmlFor="password" className="text-sm font-medium">
-                Contraseña
+                {t.auth.password_label}
               </Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -252,13 +256,13 @@ const Auth = () => {
                       : "text-muted-foreground"
                   }`}
                 >
-                  He leído y acepto los{" "}
+                  {t.auth.terms_accept}{" "}
                   <Link 
                     to="/terms" 
                     className="text-primary hover:underline"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    Términos de Servicio
+                    {t.auth.terms_link}
                   </Link>{" "}
                   y la{" "}
                   <Link 
@@ -266,7 +270,7 @@ const Auth = () => {
                     className="text-primary hover:underline"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    Política de Privacidad
+                    {t.auth.privacy_link}
                   </Link>
                   .
                 </label>
@@ -281,16 +285,16 @@ const Auth = () => {
               {loading ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
               ) : isLogin ? (
-                "Iniciar Sesión"
+                t.auth.login_btn
               ) : (
-                "Crear Cuenta"
+                t.auth.register_btn
               )}
             </Button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-muted-foreground">
-              {isLogin ? "¿No tienes cuenta?" : "¿Ya tienes cuenta?"}{" "}
+              {isLogin ? t.auth.no_account : t.auth.yes_account}{" "}
               <button
                 type="button"
                 onClick={() => {
@@ -301,7 +305,7 @@ const Auth = () => {
                 }}
                 className="text-primary hover:underline font-medium"
               >
-                {isLogin ? "Regístrate" : "Inicia sesión"}
+                {isLogin ? t.auth.register_link : t.auth.login_link}
               </button>
             </p>
           </div>
@@ -309,13 +313,13 @@ const Auth = () => {
 
         {/* Footer */}
         <p className="text-center text-xs text-muted-foreground mt-6">
-          Al continuar, aceptas nuestros{" "}
+          {t.auth.terms_continue}{" "}
           <a href="#" className="underline hover:text-foreground">
-            Términos de Servicio
+            {t.auth.terms_link}
           </a>{" "}
           y{" "}
           <a href="#" className="underline hover:text-foreground">
-            Política de Privacidad
+            {t.auth.privacy_link}
           </a>
         </p>
       </motion.div>

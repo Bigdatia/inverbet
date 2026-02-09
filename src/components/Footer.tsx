@@ -1,7 +1,10 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { useLanguage } from "@/context/LanguageContext";
 
 const Footer = () => {
+  const { t } = useLanguage();
+
   return (
     <footer className="py-12 border-t border-border">
       <div className="container mx-auto px-6">
@@ -21,16 +24,16 @@ const Footer = () => {
             {/* Links */}
             <div className="flex flex-wrap items-center justify-center gap-6 text-sm">
               <Link to="/terms" className="text-muted-foreground hover:text-foreground transition-colors">
-                Términos de Servicio
+                {t.footer.terms}
               </Link>
               <Link to="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">
-                Política de Privacidad
+                {t.footer.privacy}
               </Link>
               <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                Contacto
+                {t.footer.contact}
               </a>
               <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                FAQ
+                {t.footer.faq}
               </a>
             </div>
           </div>
@@ -40,10 +43,9 @@ const Footer = () => {
 
           {/* Bottom */}
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-            <p>© 2026 Inverbet. Todos los derechos reservados.</p>
+            <p>© 2026 Inverbet. {t.footer.rights}</p>
             <p className="text-center md:text-right max-w-md">
-              Juega responsablemente. Tecnología desarrollada para mayores de 18 años. 
-              El juego puede ser adictivo, juegue con moderación.
+              {t.footer.disclaimer}
             </p>
           </div>
         </motion.div>
@@ -51,5 +53,6 @@ const Footer = () => {
     </footer>
   );
 };
+
 
 export default Footer;
