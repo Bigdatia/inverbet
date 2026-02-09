@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Check, Zap, CreditCard } from "lucide-react";
+import { Check, Zap, CreditCard, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCheckout } from "@/context/CheckoutContext";
 
@@ -11,8 +11,14 @@ const benefits = [
   "Historial completo de señales y estadísticas",
 ];
 
+import { useTRM, formatCurrencyCOP } from "@/hooks/useTRM";
+
 const PricingSection = () => {
   const { openCheckout } = useCheckout();
+  const { data: trm, isLoading } = useTRM();
+  const priceUSD = 20;
+  const priceCOP = trm ? priceUSD * trm : 0;
+
   return (
     <section id="pricing" className="py-24 relative overflow-hidden">
       {/* Background effects */}
@@ -55,13 +61,18 @@ const PricingSection = () => {
                 </span>
               </div>
 
-              <div className="flex items-baseline justify-center gap-2">
-                <span className="text-5xl md:text-6xl font-display font-bold">$29</span>
-                <span className="text-muted-foreground text-lg">USD / mes</span>
+              <div className="flex flex-col items-center justify-center gap-1">
+                <div className="flex items-baseline gap-2">
+                    <span className="text-5xl md:text-6xl font-display font-bold">${priceUSD}</span>
+                    <span className="text-muted-foreground text-lg">USD / mes</span>
+                </div>
+                <div className="text-lg font-medium text-primary/80">
+                    {isLoading ? "Cargando TRM..." : `≈ ${formatCurrencyCOP(priceCOP)} COP`}
+                </div>
               </div>
 
-              <p className="text-muted-foreground mt-3">
-                Comienza con 7 días de prueba gratis
+              <p className="text-muted-foreground mt-3 text-sm">
+                Acceso inmediato a todo el contenido
               </p>
             </div>
 
@@ -101,29 +112,23 @@ const PricingSection = () => {
               </div>
               <div className="flex items-center justify-center gap-6">
                 {/* Payment icons - simplified monochromatic style */}
-                <div className="text-muted-foreground hover:text-foreground transition-colors">
+                <div className="text-muted-foreground hover:text-foreground transition-colors flex flex-col items-center">
                   <svg className="h-6 w-auto" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
                   </svg>
                   <span className="text-xs mt-1 block">Binance</span>
                 </div>
-                <div className="text-muted-foreground hover:text-foreground transition-colors">
-                  <svg className="h-6 w-auto" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.591-7.305z" />
-                  </svg>
-                  <span className="text-xs mt-1 block">Stripe</span>
-                </div>
-                <div className="text-muted-foreground hover:text-foreground transition-colors">
+                
+                <div className="text-muted-foreground hover:text-foreground transition-colors flex flex-col items-center">
                   <svg className="h-6 w-auto" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 3.72a.77.77 0 0 1 .757-.629h6.441c2.136 0 3.616.507 4.397 1.509.76.974.97 2.231.606 3.719l-.003.013v.006c-.385 1.764-1.25 3.17-2.572 4.18-1.282.977-2.926 1.474-4.887 1.474H7.576a.641.641 0 0 0-.633.54l-.867 5.665a.641.641 0 0 1-.633.54h-2.47l.103-.64z" />
                   </svg>
                   <span className="text-xs mt-1 block">PayPal</span>
                 </div>
-                <div className="text-muted-foreground hover:text-foreground transition-colors">
-                  <svg className="h-6 w-auto" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm0 4v8h16V8H4zm2 2h4v4H6v-4z" />
-                  </svg>
-                  <span className="text-xs mt-1 block">PSE</span>
+
+                <div className="text-muted-foreground hover:text-foreground transition-colors flex flex-col items-center">
+                  <QrCode className="h-6 w-6" />
+                  <span className="text-xs mt-1 block">Bancolombia QR</span>
                 </div>
               </div>
             </div>

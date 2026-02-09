@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, Loader2, DollarSign, QrCode } from "lucide-react";
+import { Check, Loader2, DollarSign, QrCode, Download, Copy } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -13,12 +13,15 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
 
+import { useTRM, formatCurrencyCOP } from "@/hooks/useTRM";
+
 interface ManualPaymentFormProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
 const ManualPaymentForm = ({ isOpen, onClose }: ManualPaymentFormProps) => {
+  const { data: trm } = useTRM();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
@@ -30,14 +33,27 @@ const ManualPaymentForm = ({ isOpen, onClose }: ManualPaymentFormProps) => {
   // TODO: Replace with real WhatsApp number and PayPal email
   const WHATSAPP_NUMBER = "573000000000"; 
   const PAYPAL_EMAIL = "pagos@inverbet.com";
-  const AMOUNT_USD = "29";
-  const AMOUNT_COP = "120.000"; // Aproximado
+  const AMOUNT_USD = 20;
+  const priceCOP = trm ? AMOUNT_USD * trm : 0;
+  
+  const QR_IMAGE_PATH = "/assets/qr-bancolombia.png";
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
     }));
+  };
+
+  const handleDownloadQR = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const link = document.createElement("a");
+    link.href = QR_IMAGE_PATH;
+    link.download = "Inverbet-QR-Bancolombia.png";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("QR Descargado. Súbelo a tu App Bancolombia.");
   };
 
   const handleWhatsAppRedirect = (e: React.FormEvent) => {
@@ -105,7 +121,7 @@ Adjunto mi comprobante de pago en este chat.`;
             <h3 className="text-sm font-semibold text-primary uppercase tracking-wide">1. Tus Datos</h3>
             <div className="grid gap-4">
                 <div className="grid gap-2">
-                <Label htmlFor="fullName">Nombre Completo</Label>
+                <Label htmlFor="fullName">Nombre Completo <span className="text-red-500">*</span></Label>
                 <Input
                     id="fullName"
                     name="fullName"
@@ -119,7 +135,7 @@ Adjunto mi comprobante de pago en este chat.`;
                 
                 <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
-                    <Label htmlFor="idDocument">Documento ID</Label>
+                    <Label htmlFor="idDocument">Documento ID <span className="text-red-500">*</span></Label>
                     <Input
                         id="idDocument"
                         name="idDocument"
@@ -131,7 +147,7 @@ Adjunto mi comprobante de pago en este chat.`;
                     />
                     </div>
                     <div className="grid gap-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">Email <span className="text-red-500">*</span></Label>
                     <Input
                         id="email"
                         name="email"
@@ -185,10 +201,10 @@ Adjunto mi comprobante de pago en este chat.`;
             <div className="mt-4 p-5 bg-black/40 rounded-lg border border-border/60 flex flex-col items-center text-center">
                 {formData.paymentMethod === "bancolombia" ? (
                     <div className="space-y-3 w-full">
-                        <div className="bg-white p-2 rounded-lg inline-block w-48 h-48 mx-auto relative overflow-hidden">
+                        <div className="bg-white p-2 rounded-lg inline-block w-48 h-48 mx-auto relative overflow-hidden group">
                             {/* Placeholder for QR Code */}
                             <img 
-                                src="/assets/qr-bancolombia.png" 
+                                src={QR_IMAGE_PATH} 
                                 alt="QR Bancolombia" 
                                 className="w-full h-full object-contain"
                                 onError={(e) => {
@@ -196,11 +212,25 @@ Adjunto mi comprobante de pago en este chat.`;
                                 }}
                             />
                         </div>
+                        
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={handleDownloadQR}
+                            className="w-full border-primary/50 text-foreground hover:bg-primary/20 hover:text-primary"
+                        >
+                            <Download className="mr-2 h-4 w-4" />
+                            Descargar Imagen QR
+                        </Button>
+
                         <div>
                             <p className="font-mono text-lg font-bold text-white tracking-widest">
-                                $ {AMOUNT_COP} COP
+                                {trm ? formatCurrencyCOP(priceCOP) : "Cargando..."} COP
                             </p>
-                            <p className="text-xs text-muted-foreground mt-1">Escanea desde tu App Bancolombia / Nequi</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Escanea desde la app de tu banco.<br/>
+                                <span className="text-primary/80">¿Desde celular? Descarga el QR y súbelo en tu App.</span>
+                            </p>
                         </div>
                     </div>
                 ) : (
@@ -210,7 +240,9 @@ Adjunto mi comprobante de pago en este chat.`;
                         </div>
                         <div>
                             <p className="text-sm text-muted-foreground">Enviar pago a:</p>
-                            <p className="font-mono text-lg font-bold text-white select-all">{PAYPAL_EMAIL}</p>
+                            <p className="font-mono text-lg font-bold text-white select-all">
+                                {PAYPAL_EMAIL}   
+                            </p>
                         </div>
                         <div className="bg-secondary/20 p-3 rounded text-sm">
                             <span className="text-muted-foreground">Monto a enviar:</span>
