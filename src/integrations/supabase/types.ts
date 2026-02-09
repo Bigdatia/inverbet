@@ -13,9 +13,39 @@ export type Database = {
     PostgrestVersion: "14.1"
   }
   public: {
-    Tables: {
-      [_ in never]: never
-    }
+      registrations: {
+        Row: {
+          id: string
+          created_at: string
+          full_name: string
+          email: string
+          id_document: string
+          payment_method: "bancolombia" | "paypal"
+          payment_proof_url: string | null
+          status: "pending" | "approved" | "rejected"
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          full_name: string
+          email: string
+          id_document: string
+          payment_method: "bancolombia" | "paypal"
+          payment_proof_url?: string | null
+          status?: "pending" | "approved" | "rejected"
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          full_name?: string
+          email?: string
+          id_document?: string
+          payment_method?: "bancolombia" | "paypal"
+          payment_proof_url?: string | null
+          status?: "pending" | "approved" | "rejected"
+        }
+        Relationships: []
+      }
     Views: {
       [_ in never]: never
     }

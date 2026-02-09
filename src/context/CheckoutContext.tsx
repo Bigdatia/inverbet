@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
-import CheckoutModal from "@/components/CheckoutModal";
+import ManualPaymentForm from "@/components/checkout/ManualPaymentForm";
 
 interface CheckoutContextType {
   openCheckout: () => void;
@@ -18,7 +18,7 @@ export const CheckoutProvider = ({ children }: { children: ReactNode }) => {
   return (
     <CheckoutContext.Provider value={{ openCheckout, closeCheckout, isCheckoutOpen }}>
       {children}
-      <CheckoutModal isOpen={isCheckoutOpen} onClose={closeCheckout} />
+      <ManualPaymentForm isOpen={isCheckoutOpen} onClose={closeCheckout} />
     </CheckoutContext.Provider>
   );
 };
