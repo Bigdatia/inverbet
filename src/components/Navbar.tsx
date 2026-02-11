@@ -73,12 +73,6 @@ const Navbar = () => {
   );
 };
 
-          
-          {/* Mobile Language Switcher (Visible on small screens if needed, strictly asking for desktop mainly but good to have) - simplifying to just desktop as requested "al lado del boton" */}
-        </div>
-      </div>
-    </motion.nav>
-  );
-};
+
 
 export default Navbar;
