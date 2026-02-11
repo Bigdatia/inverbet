@@ -34,7 +34,7 @@ const Navbar = () => {
             variant="ghost"
             size="sm"
             onClick={toggleLanguage}
-            className="hidden sm:flex items-center gap-1 text-muted-foreground hover:text-foreground hover:bg-transparent"
+            className="flex items-center gap-1 text-muted-foreground hover:text-foreground hover:bg-transparent px-2 sm:px-4"
           >
             <Globe className="h-4 w-4" />
             <span className="font-medium">{language.toUpperCase()}</span>
@@ -42,8 +42,9 @@ const Navbar = () => {
 
           <Button
             variant="outline"
+            size="sm"
             onClick={() => navigate("/auth")}
-            className="hidden sm:flex border-foreground/20 text-foreground hover:bg-foreground/10 hover:text-foreground font-medium"
+            className="flex border-foreground/20 text-foreground hover:bg-foreground/10 hover:text-foreground font-medium px-3 sm:px-4"
           >
             {t.navbar.login}
           </Button>

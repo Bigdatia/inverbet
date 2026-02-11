@@ -132,7 +132,7 @@ I am attaching my payment proof in this chat.`;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-[#0a0a0a] border border-border/50 max-w-lg p-0 overflow-hidden sm:max-h-[95vh] overflow-y-auto">
+      <DialogContent className="bg-[#0a0a0a] border border-border/50 max-w-lg p-0 max-h-[90vh] overflow-y-auto">
         <DialogHeader className="p-6 pb-4 border-b border-border/30 bg-secondary/10">
           <DialogTitle className="font-display text-xl text-center">
             {t.payment_form.title}
