@@ -38,7 +38,14 @@ const AdminLayout = () => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const fullName = user.user_metadata?.full_name;
+        // Fetch profile data to get the most up-to-date name
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .single();
+          
+        const fullName = profile?.full_name || user.user_metadata?.full_name;
         const firstName = fullName ? fullName.split(" ")[0] : (user.email?.split("@")[0] || "Admin");
         setUserName(firstName);
       }

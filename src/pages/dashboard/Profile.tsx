@@ -3,16 +3,105 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { User as UserIcon, Mail, CreditCard, Shield, Crown, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 const Profile = () => {
   const [user, setUser] = useState<any>(null);
 
+  const { toast } = useToast();
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [passwords, setPasswords] = useState({
+    current: "",
+    new: "",
+    confirm: ""
+  });
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .single();
+        
+        setUser({ ...user, full_name: profile?.full_name });
+      } else {
+        setUser(null);
+      }
     });
   }, []);
+
+  const handlePasswordChange = async () => {
+    if (!passwords.current || !passwords.new || !passwords.confirm) {
+        toast({
+            title: "Error",
+            description: "Por favor completa todos los campos",
+            variant: "destructive"
+        });
+        return;
+    }
+
+    if (passwords.new !== passwords.confirm) {
+        toast({
+            title: "Error",
+            description: "Las contraseñas nuevas no coinciden",
+            variant: "destructive"
+        });
+        return;
+    }
+
+    if (passwords.new.length < 6) {
+        toast({
+            title: "Error",
+            description: "La contraseña debe tener al menos 6 caracteres",
+            variant: "destructive"
+        });
+        return;
+    }
+
+    setLoading(true);
+
+    try {
+        // 1. Verify current password by signing in (re-auth)
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: user.email,
+            password: passwords.current
+        });
+
+        if (signInError) {
+            throw new Error("La contraseña actual es incorrecta");
+        }
+
+        // 2. Update password
+        const { error: updateError } = await supabase.auth.updateUser({
+            password: passwords.new
+        });
+
+        if (updateError) throw updateError;
+
+        toast({
+            title: "Éxito",
+            description: "Contraseña actualizada correctamente",
+        });
+
+        setPasswords({ current: "", new: "", confirm: "" });
+        setShowPasswordForm(false);
+
+    } catch (error: any) {
+        toast({
+            title: "Error",
+            description: error.message || "Error al actualizar la contraseña",
+            variant: "destructive"
+        });
+    } finally {
+        setLoading(false);
+    }
+  };
 
   const memberSince = user?.created_at
     ? new Date(user.created_at).toLocaleDateString("es-ES", {
@@ -45,7 +134,7 @@ const Profile = () => {
           </div>
           <div className="flex-1">
             <h2 className="font-display text-xl font-bold capitalize">
-              {user?.email?.split("@")[0] || "Usuario"}
+              {user?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Usuario"}
             </h2>
             <div className="flex items-center gap-2 text-muted-foreground mt-1">
               <Mail className="h-4 w-4" />
@@ -97,7 +186,7 @@ const Profile = () => {
         <div className="flex items-center justify-between pt-4 border-t border-border">
           <div>
             <span className="text-muted-foreground text-sm">Próximo cobro:</span>
-            <p className="font-mono font-bold">$29 USD - 15 Feb 2026</p>
+            <p className="font-mono font-bold">$20 USD - 15 Feb 2026</p>
           </div>
           <Button variant="outline" className="border-border">
             Gestionar
@@ -141,15 +230,80 @@ const Profile = () => {
           <h3 className="font-display font-bold">Seguridad</h3>
         </div>
         <div className="space-y-3">
-          <Button variant="outline" className="w-full justify-start border-border">
-            Cambiar contraseña
-          </Button>
+        <div className="space-y-4">
+          {!showPasswordForm ? (
+              <Button 
+                variant="outline" 
+                className="w-full justify-start border-border"
+                onClick={() => setShowPasswordForm(true)}
+              >
+                Cambiar contraseña
+              </Button>
+          ) : (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                className="space-y-4 pt-2"
+              >
+                  <div className="space-y-2">
+                      <Label htmlFor="current">Contraseña actual</Label>
+                      <Input 
+                        id="current" 
+                        type="password" 
+                        placeholder="••••••••"
+                        value={passwords.current}
+                        onChange={(e) => setPasswords({...passwords, current: e.target.value})}
+                      />
+                  </div>
+                  <div className="space-y-2">
+                      <Label htmlFor="new">Nueva contraseña</Label>
+                      <Input 
+                        id="new" 
+                        type="password" 
+                        placeholder="••••••••"
+                        value={passwords.new}
+                        onChange={(e) => setPasswords({...passwords, new: e.target.value})}
+                      />
+                  </div>
+                  <div className="space-y-2">
+                      <Label htmlFor="confirm">Confirmar nueva contraseña</Label>
+                      <Input 
+                        id="confirm" 
+                        type="password" 
+                        placeholder="••••••••"
+                        value={passwords.confirm}
+                        onChange={(e) => setPasswords({...passwords, confirm: e.target.value})}
+                      />
+                  </div>
+                  <div className="flex gap-2 pt-2">
+                      <Button 
+                        onClick={handlePasswordChange} 
+                        disabled={loading}
+                        className="bg-primary text-primary-foreground hover:bg-primary/90"
+                      >
+                          {loading ? "Guardando..." : "Guardar cambios"}
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        onClick={() => {
+                            setShowPasswordForm(false);
+                            setPasswords({ current: "", new: "", confirm: "" });
+                        }}
+                        disabled={loading}
+                      >
+                          Cancelar
+                      </Button>
+                  </div>
+              </motion.div>
+          )}
+
           <Button
             variant="outline"
             className="w-full justify-start border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
           >
             Cerrar todas las sesiones
           </Button>
+        </div>
         </div>
       </motion.div>
     </div>

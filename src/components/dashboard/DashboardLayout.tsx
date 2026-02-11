@@ -30,20 +30,47 @@ const DashboardLayout = () => {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setUser(session?.user ?? null);
         setLoading(false);
         if (!session?.user) {
           navigate("/auth");
+        } else if (session?.user) {
+           const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', session.user.id)
+            .single();
+            if (profile?.full_name) {
+                session.user.user_metadata.full_name = profile.full_name;
+                setUser(session.user);
+            }
         }
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setUser(session?.user ?? null);
       setLoading(false);
       if (!session?.user) {
         navigate("/auth");
+      } else {
+        // Fetch profile for name
+         const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', session.user.id)
+          .single();
+        
+        if (profile?.full_name) {
+             // We can't easily update the session object, but we can store the name in a local state if we want to retrieve it later, 
+             // OR we can just update the `userName` derivation logic below. 
+             // actually `user` state is used.
+             // Let's attach it to user metadata in state (hacky) or better: use a separate state for profile. 
+             // But to minimize changes, let's update the user metadata locally in the state object
+             session.user.user_metadata.full_name = profile.full_name;
+             setUser(session.user);
+        }
       }
     });
 
