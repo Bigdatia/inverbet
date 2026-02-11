@@ -13,6 +13,11 @@ import Academy from "./pages/dashboard/Academy";
 import Stats from "./pages/dashboard/Stats";
 import Profile from "./pages/dashboard/Profile";
 import NotFound from "./pages/NotFound";
+import AdminLayout from "./components/admin/AdminLayout";
+import AdminRoute from "./components/admin/AdminRoute";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import UserManagement from "./pages/admin/UserManagement";
+import Registrations from "./pages/admin/Registrations";
 import CookieConsentBanner from "./components/CookieConsentBanner";
 import ScrollToTop from "./components/ScrollToTop";
 import { CheckoutProvider } from "./context/CheckoutContext";
@@ -40,6 +45,21 @@ const App = () => (
                 <Route path="academy" element={<Academy />} />
                 <Route path="stats" element={<Stats />} />
                 <Route path="profile" element={<Profile />} />
+              </Route>
+              
+              {/* Admin Routes */}
+              <Route element={<AdminRoute />}>
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="users" element={<UserManagement />} />
+                  <Route path="registrations" element={<Registrations />} />
+                  
+                  {/* Unified Platform Routes for Admin */}
+                  <Route path="scanner" element={<Scanner />} />
+                  <Route path="academy" element={<Academy />} />
+                  <Route path="stats" element={<Stats />} />
+                  <Route path="profile" element={<Profile />} />
+                </Route>
               </Route>
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

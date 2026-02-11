@@ -13,6 +13,7 @@ export type Database = {
     PostgrestVersion: "14.1"
   }
   public: {
+    Tables: {
       registrations: {
         Row: {
           id: string
@@ -46,6 +47,56 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          id: string
+          full_name: string | null
+          email: string | null
+          role: "user" | "admin"
+          subscription_status: "active" | "inactive" | "canceled"
+          subscription_tier: "free" | "premium"
+          subscription_start_date: string | null
+          subscription_end_date: string | null
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          full_name?: string | null
+          email?: string | null
+          role?: "user" | "admin"
+          subscription_status?: "active" | "inactive" | "canceled"
+          subscription_tier?: "free" | "premium"
+          subscription_start_date?: string | null
+          subscription_end_date?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          full_name?: string | null
+          email?: string | null
+          role?: "user" | "admin"
+          subscription_status?: "active" | "inactive" | "canceled"
+          subscription_tier?: "free" | "premium"
+          subscription_start_date?: string | null
+          subscription_end_date?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+    }
     Views: {
       [_ in never]: never
     }
