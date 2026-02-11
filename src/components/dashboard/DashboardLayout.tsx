@@ -63,7 +63,8 @@ const DashboardLayout = () => {
     );
   }
 
-  const userName = user?.email?.split("@")[0] || "Usuario";
+  const fullName = user?.user_metadata?.full_name;
+  const userName = fullName ? fullName.split(" ")[0] : (user?.email?.split("@")[0] || "Usuario");
 
   return (
     <div className="h-screen bg-black flex overflow-hidden">

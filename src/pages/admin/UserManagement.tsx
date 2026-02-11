@@ -42,23 +42,23 @@ const UserManagement = () => {
     fetchUsers();
   }, []);
 
-  const toggleSubscription = async (userId: string, currentStatus: string) => {
-    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+  const toggleUserStatus = async (userId: string, currentStatus: boolean) => {
+    const newStatus = !currentStatus;
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({ subscription_status: newStatus })
+        .update({ is_active: newStatus })
         .eq('id', userId);
 
       if (error) throw error;
 
       setUsers(users.map((user: any) => 
-        user.id === userId ? { ...user, subscription_status: newStatus } : user
+        user.id === userId ? { ...user, is_active: newStatus } : user
       ));
 
       toast({
         title: "Estado actualizado",
-        description: `La suscripción ha sido ${newStatus === 'active' ? 'activada' : 'desactivada'}.`,
+        description: `El usuario ha sido ${newStatus ? 'activado' : 'desactivado'}.`,
       });
     } catch (error: any) {
       toast({
@@ -77,41 +77,61 @@ const UserManagement = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Email</TableHead>
               <TableHead>Nombre</TableHead>
+              <TableHead>Email</TableHead>
               <TableHead>Rol</TableHead>
-              <TableHead>Suscripción</TableHead>
-              <TableHead>Acciones</TableHead>
+              <TableHead>Fecha Registro</TableHead>
+              <TableHead>Último Pago</TableHead>
+              <TableHead>Estado</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((user: any) => (
-              <TableRow key={user.id}>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>{user.full_name || 'N/A'}</TableCell>
-                <TableCell className="capitalize">{user.role}</TableCell>
-                <TableCell>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    user.subscription_status === 'active' 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    {user.subscription_status || 'inactive'}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      checked={user.subscription_status === 'active'}
-                      onCheckedChange={() => toggleSubscription(user.id, user.subscription_status)}
-                    />
-                    <span className="text-sm text-muted-foreground">
-                      {user.subscription_status === 'active' ? 'Activo' : 'Inactivo'}
+            {users.map((user: any) => {
+              // Mock random date for last payment within the last 30 days
+              const lastPaymentDate = new Date();
+              lastPaymentDate.setDate(lastPaymentDate.getDate() - Math.floor(Math.random() * 30));
+              
+              return (
+                <TableRow key={user.id}>
+                  <TableCell className="font-medium">{user.full_name || 'N/A'}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell className="capitalize">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      user.role === 'admin' 
+                        ? 'bg-purple-100 text-purple-800' 
+                        : 'bg-blue-100 text-blue-800'
+                    }`}>
+                      {user.role}
                     </span>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
+                  </TableCell>
+                  <TableCell>
+                    {new Date(user.created_at).toLocaleDateString('es-ES', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </TableCell>
+                  <TableCell>
+                    {lastPaymentDate.toLocaleDateString('es-ES', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={user.is_active}
+                        onCheckedChange={() => toggleUserStatus(user.id, user.is_active)}
+                      />
+                      <span className={`text-sm ${user.is_active ? 'text-green-600' : 'text-red-500'}`}>
+                        {user.is_active ? 'Activo' : 'Inactivo'}
+                      </span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>

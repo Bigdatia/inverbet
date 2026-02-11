@@ -18,11 +18,12 @@ const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [termsError, setTermsError] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string; fullName?: string }>({});
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -46,7 +47,7 @@ const Auth = () => {
   }, [navigate]);
 
   const validate = () => {
-    const newErrors: { email?: string; password?: string } = {};
+    const newErrors: { email?: string; password?: string; fullName?: string } = {};
     
     // Custom validation messages are handled by translating the error keys or setting defaults here.
     // Zod is schema validation but message can be custom.
@@ -58,6 +59,10 @@ const Auth = () => {
     const passwordResult = passwordSchema.safeParse(password);
     if (!passwordResult.success) {
       newErrors.password = t.auth.errors.invalid_password;
+    }
+
+    if (!isLogin && !fullName.trim()) {
+      newErrors.fullName = "El nombre completo es requerido";
     }
     
     setErrors(newErrors);
@@ -106,6 +111,9 @@ const Auth = () => {
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/dashboard`,
+            data: {
+              full_name: fullName,
+            }
           },
         });
         
@@ -185,6 +193,27 @@ const Auth = () => {
           </div>
 
           <form onSubmit={handleAuth} className="space-y-5">
+            {!isLogin && (
+              <div className="space-y-2">
+                <Label htmlFor="fullName" className="text-sm font-medium">
+                  Nombre Completo
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="fullName"
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Juan Pérez"
+                    className="h-12 bg-secondary border-border focus:border-primary"
+                  />
+                </div>
+                {errors.fullName && (
+                  <p className="text-destructive text-sm">{errors.fullName}</p>
+                )}
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium">
                 {t.auth.email_label}

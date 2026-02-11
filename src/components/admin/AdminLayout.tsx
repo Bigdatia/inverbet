@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, 
@@ -30,6 +31,20 @@ const adminItems = [
 const AdminLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
+
+  const [userName, setUserName] = useState("Admin");
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const fullName = user.user_metadata?.full_name;
+        const firstName = fullName ? fullName.split(" ")[0] : (user.email?.split("@")[0] || "Admin");
+        setUserName(firstName);
+      }
+    };
+    getUser();
+  }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -104,7 +119,26 @@ const AdminLayout = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto bg-black">
+      <main className="flex-1 overflow-auto bg-black flex flex-col">
+        {/* Header */}
+        <header className="sticky top-0 z-30 bg-black/90 backdrop-blur-xl border-b border-border/50 px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="font-display text-xl font-bold text-white">
+                Bienvenido, <span className="capitalize">{userName}</span>
+              </h1>
+            </div>
+            
+            <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/30 rounded-full">
+               <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
+              </span>
+              <span className="text-sm font-medium text-primary">Admin Mode</span>
+            </div>
+          </div>
+        </header>
+
         <div className="p-8">
           <Outlet />
         </div>
