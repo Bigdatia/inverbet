@@ -76,7 +76,6 @@ const AdminLayout = () => {
         <div className="p-6 border-b border-border">
           <Link to="/" className="flex items-center gap-2">
             <img src="/logotipo.png" alt="Inverbet" className="h-8 w-auto" />
-            <span className="font-display font-bold text-lg">Admin</span>
           </Link>
         </div>
         
