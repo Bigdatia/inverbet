@@ -4,8 +4,31 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/context/LanguageContext";
 import { Globe, User } from "lucide-react";
 
-// ... (in component)
+const Navbar = () => {
+  const navigate = useNavigate();
+  const { t, language, setLanguage } = useLanguage();
 
+  const toggleLanguage = () => {
+    setLanguage(language === "es" ? "en" : "es");
+  };
+
+  return (
+    <motion.nav
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className="fixed top-0 left-0 right-0 z-50 glassmorphism"
+    >
+      <div className="container mx-auto px-6 py-4 flex items-center justify-between">
+        {/* Logo */}
+        <Link to="/" className="flex items-center gap-2 cursor-pointer">
+          <img src="/logotipo.png" alt="Inverbet Logo" className="h-10 w-auto object-contain" />
+        </Link>
+
+
+
+        {/* CTA Buttons */}
+        <div className="flex items-center gap-3">
           {/* Language Switcher */}
           <Button
             variant="ghost"
@@ -43,6 +66,13 @@ import { Globe, User } from "lucide-react";
           >
             {t.navbar.subscribe}
           </Button>
+          
+        </div>
+      </div>
+    </motion.nav>
+  );
+};
+
           
           {/* Mobile Language Switcher (Visible on small screens if needed, strictly asking for desktop mainly but good to have) - simplifying to just desktop as requested "al lado del boton" */}
         </div>
