@@ -77,9 +77,9 @@ const AdminLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="h-screen bg-background flex overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-64 border-r border-border bg-card/50 hidden md:flex flex-col">
+      <aside className="w-64 border-r border-border bg-card/50 hidden md:flex flex-col h-full shrink-0">
         <div className="p-6 border-b border-border">
           <Link to="/" className="flex items-center gap-2">
             <img src="/logotipo.png" alt="Inverbet" className="h-8 w-auto" />

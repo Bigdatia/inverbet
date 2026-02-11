@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import SignalCard from "@/components/dashboard/SignalCard";
 import SignalCardSkeleton from "@/components/dashboard/SignalCardSkeleton";
@@ -65,6 +66,8 @@ const mockSignals = [
 ];
 
 const Scanner = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [activeFilter, setActiveFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [signals, setSignals] = useState(mockSignals);
@@ -173,7 +176,13 @@ const Scanner = () => {
                 <span className="font-mono text-sm">0%</span>
               </div>
             </div>
-            <button className="px-4 py-2 bg-accent text-accent-foreground rounded-lg font-medium hover:bg-accent/90 transition-colors whitespace-nowrap">
+            <button 
+              onClick={() => {
+                const prefix = location.pathname.startsWith('/admin') ? '/admin' : '/dashboard';
+                navigate(`${prefix}/academy`);
+              }}
+              className="px-4 py-2 bg-accent text-accent-foreground rounded-lg font-medium hover:bg-accent/90 transition-colors whitespace-nowrap"
+            >
               Ir a Academy
             </button>
           </div>
