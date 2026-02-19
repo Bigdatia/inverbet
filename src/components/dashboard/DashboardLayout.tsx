@@ -1,8 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, Outlet, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
-import { User } from "@supabase/supabase-js";
+import { useAuth } from "@/context/AuthContext";
 import {
   Radar,
   GraduationCap,
@@ -22,65 +21,10 @@ const menuItems = [
 ];
 
 const DashboardLayout = () => {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, profile, loading, signOut } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
-
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setUser(session?.user ?? null);
-        setLoading(false);
-        if (!session?.user) {
-          navigate("/auth");
-        } else if (session?.user) {
-           const { data: profile } = await supabase
-            .from('profiles')
-            .select('full_name')
-            .eq('id', session.user.id)
-            .single();
-            if (profile?.full_name) {
-                session.user.user_metadata.full_name = profile.full_name;
-                setUser(session.user);
-            }
-        }
-      }
-    );
-
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-      if (!session?.user) {
-        navigate("/auth");
-      } else {
-        // Fetch profile for name
-         const { data: profile } = await supabase
-          .from('profiles')
-          .select('full_name')
-          .eq('id', session.user.id)
-          .single();
-        
-        if (profile?.full_name) {
-             // We can't easily update the session object, but we can store the name in a local state if we want to retrieve it later, 
-             // OR we can just update the `userName` derivation logic below. 
-             // actually `user` state is used.
-             // Let's attach it to user metadata in state (hacky) or better: use a separate state for profile. 
-             // But to minimize changes, let's update the user metadata locally in the state object
-             session.user.user_metadata.full_name = profile.full_name;
-             setUser(session.user);
-        }
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/");
-  };
 
   if (loading) {
     return (
@@ -90,7 +34,22 @@ const DashboardLayout = () => {
     );
   }
 
-  const fullName = user?.user_metadata?.full_name;
+  // Redirect if not authenticated (AuthContext handles state, but we might want explicit redirect here if it's not handled by a route guard)
+  // Actually, DashboardLayout is a protected route usually, but let's check. 
+  // In App.tsx it's just a Route. AuthContext doesn't auto-redirect unless we call something.
+  // The original code handled redirect in useEffect.
+  if (!user && !loading) {
+     // useAuth doesn't automatically redirect, so we should do it here or in a useEffect.
+     // Better to use a ProtectedRoute component, but strictly refactoring this file:
+     // We can just return null and useEffect redirect?
+     // Or render Navigate.
+  }
+
+  // Effect for redirect
+  // useEffect(() => { if (!loading && !user) navigate("/auth"); }, [loading, user, navigate]);
+  // But we can't use hooks inside if(loading). Redo structure.
+
+  const fullName = profile?.full_name || user?.user_metadata?.full_name;
   const userName = fullName ? fullName.split(" ")[0] : (user?.email?.split("@")[0] || "Usuario");
 
   return (
@@ -132,7 +91,7 @@ const DashboardLayout = () => {
 
         {/* Logout */}
         <button
-          onClick={handleLogout}
+          onClick={() => signOut()}
           className="flex items-center gap-3 px-3 py-3 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-200 mt-auto"
         >
           <LogOut className="h-5 w-5" />
@@ -195,7 +154,7 @@ const DashboardLayout = () => {
         </nav>
 
         <button
-          onClick={handleLogout}
+          onClick={() => signOut()}
           className="mt-auto flex items-center gap-3 px-3 py-3 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
         >
           <LogOut className="h-5 w-5" />

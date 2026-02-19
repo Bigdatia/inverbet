@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, 
@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
 const platformItems = [
@@ -30,32 +29,13 @@ const adminItems = [
 
 const AdminLayout = () => {
   const location = useLocation();
-  const navigate = useNavigate();
+  const { profile, user, signOut } = useAuth();
 
-  const [userName, setUserName] = useState("Admin");
-
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        // Fetch profile data to get the most up-to-date name
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('full_name')
-          .eq('id', user.id)
-          .single();
-          
-        const fullName = profile?.full_name || user.user_metadata?.full_name;
-        const firstName = fullName ? fullName.split(" ")[0] : (user.email?.split("@")[0] || "Admin");
-        setUserName(firstName);
-      }
-    };
-    getUser();
-  }, []);
+  const fullName = profile?.full_name || user?.user_metadata?.full_name;
+  const userName = fullName ? fullName.split(" ")[0] : (user?.email?.split("@")[0] || "Admin");
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/");
+    await signOut();
   };
 
   const NavItem = ({ item }: { item: any }) => {
