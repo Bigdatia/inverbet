@@ -113,46 +113,36 @@ const Auth = () => {
           redirectTo: `${window.location.origin}/update-password`,
         });
         
-        if (error) {
-          toast({
-            title: t.auth.errors.error_title,
-            description: error.message,
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Correo enviado",
-            description: "Revisa tu bandeja de entrada para restablecer tu contraseña.",
-          });
-          setIsResetMode(false);
-          setIsLogin(true);
-        }
+        if (error) throw error;
+
+        toast({
+          title: "Correo enviado",
+          description: "Revisa tu bandeja de entrada para restablecer tu contraseña.",
+        });
+        setIsResetMode(false);
+        setIsLogin(true);
       } else if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
+        // Timeout wrapper for sign in
+        const signInPromise = supabase.auth.signInWithPassword({
           email,
           password,
         });
         
-        if (error) {
-          if (error.message.includes("Invalid login credentials")) {
-            toast({
-              title: t.auth.errors.auth_error,
-              description: t.auth.errors.auth_error_desc,
-              variant: "destructive",
-            });
-          } else {
-            toast({
-              title: t.auth.errors.error_title,
-              description: error.message,
-              variant: "destructive",
-            });
-          }
-        } else {
-           // Manually navigate on success to ensure feedback
+        const timeoutPromise = new Promise<{ data: { user: null; session: null }; error: any }>((_, reject) => 
+          setTimeout(() => reject(new Error("Timeout: El servidor no responde")), 10000)
+        );
+
+        const { error } = await Promise.race([signInPromise, timeoutPromise]);
+        
+        if (error) throw error;
+
+        // Manually navigate on success
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
            const { data: profile } = await supabase
              .from('profiles')
              .select('role')
-             .eq('id', (await supabase.auth.getUser()).data.user?.id)
+             .eq('id', user.id)
              .single();
              
            if (profile?.role === 'admin') {
@@ -173,31 +163,26 @@ const Auth = () => {
           },
         });
         
-        if (error) {
-          if (error.message.includes("already registered")) {
-            toast({
-              title: t.auth.errors.existing_user,
-              description: t.auth.errors.existing_user_desc,
-              variant: "destructive",
-            });
-          } else {
-            toast({
-              title: t.auth.errors.error_title,
-              description: error.message,
-              variant: "destructive",
-            });
-          }
-        } else {
-          toast({
-            title: t.auth.errors.success_created,
-            description: t.auth.errors.check_email,
-          });
-        }
+        if (error) throw error;
+
+        toast({
+          title: t.auth.errors.success_created,
+          description: t.auth.errors.check_email,
+        });
       }
     } catch (error: any) {
+      console.error("Auth error:", error);
+      let errorMessage = error.message;
+      
+      if (errorMessage.includes("Invalid login credentials")) {
+        errorMessage = t.auth.errors.auth_error_desc;
+      } else if (errorMessage.includes("already registered")) {
+        errorMessage = t.auth.errors.existing_user_desc;
+      }
+
       toast({
         title: t.auth.errors.error_title,
-        description: t.auth.errors.something_wrong,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -302,18 +287,6 @@ const Auth = () => {
                   <Label htmlFor="password" className="text-sm font-medium">
                     {t.auth.password_label}
                   </Label>
-                  {isLogin && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsResetMode(true);
-                        setErrors({});
-                      }}
-                      className="text-xs text-primary hover:underline"
-                    >
-                      ¿Olvidaste tu contraseña?
-                    </button>
-                  )}
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -399,6 +372,22 @@ const Auth = () => {
                 t.auth.register_btn
               )}
             </Button>
+
+            {/* Forgot Password Link - Below Login Button */}
+            {isLogin && !isResetMode && (
+              <div className="text-center">
+                 <button
+                   type="button"
+                   onClick={() => {
+                     setIsResetMode(true);
+                     setErrors({});
+                   }}
+                   className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                 >
+                   ¿Olvidaste tu contraseña?
+                 </button>
+              </div>
+            )}
           </form>
 
           <div className="mt-6 text-center">

@@ -5,17 +5,21 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
-interface Signal {
+export interface Signal {
   id: string;
-  time: string;
+  created_at: string;
   league: string;
-  teamA: string;
-  teamB: string;
+  match: string; // "Team A vs Team B"
+  market: string; // The bet type
   odds: number;
-  probability: number;
-  betType: string;
+  stake: number;
+  status: string;
   analysis: string;
   confidence: "high" | "medium" | "low";
+  is_premium: boolean;
+  // Optional computed props if needed
+  teamA?: string;
+  teamB?: string;
 }
 
 interface SignalCardProps {
@@ -27,8 +31,16 @@ const SignalCard = ({ signal, index, isLocked = false, onUnlock }: SignalCardPro
   const [expanded, setExpanded] = useState(false);
   const { toast } = useToast();
 
+  // Parse teams from match string if not provided
+  const [teamA, teamB] = signal.match.includes(" vs ") 
+    ? signal.match.split(" vs ") 
+    : [signal.match, ""];
+
+  // Format time (just show time part or relative)
+  const timeDisplay = new Date(signal.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
   const copyBet = () => {
-    const betText = `${signal.teamA} vs ${signal.teamB} - ${signal.betType} @ ${signal.odds}`;
+    const betText = `${signal.match} - ${signal.market} @ ${signal.odds}`;
     navigator.clipboard.writeText(betText);
     toast({
       title: "¡Copiado!",
@@ -36,6 +48,7 @@ const SignalCard = ({ signal, index, isLocked = false, onUnlock }: SignalCardPro
     });
   };
 
+  // ... (keep getConfidenceColor and getConfidenceLabel)
   const getConfidenceColor = (confidence: string) => {
     switch (confidence) {
       case "high":
@@ -62,6 +75,7 @@ const SignalCard = ({ signal, index, isLocked = false, onUnlock }: SignalCardPro
     }
   };
 
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -76,7 +90,7 @@ const SignalCard = ({ signal, index, isLocked = false, onUnlock }: SignalCardPro
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-border/50 bg-secondary/30">
         <div className="flex items-center gap-3">
-          <span className="font-mono text-sm text-muted-foreground">{signal.time}</span>
+          <span className="font-mono text-sm text-muted-foreground">{timeDisplay}</span>
           <div className="h-4 w-px bg-border" />
           <span className="text-sm font-medium text-foreground">{signal.league}</span>
         </div>
@@ -95,9 +109,9 @@ const SignalCard = ({ signal, index, isLocked = false, onUnlock }: SignalCardPro
         {/* Match */}
         <div className="text-center mb-5">
           <h3 className="font-display text-lg md:text-xl font-bold">
-            {signal.teamA}{" "}
+            {teamA}{" "}
             <span className="text-muted-foreground mx-2">vs</span>{" "}
-            {signal.teamB}
+            {teamB}
           </h3>
         </div>
 
@@ -115,8 +129,8 @@ const SignalCard = ({ signal, index, isLocked = false, onUnlock }: SignalCardPro
             )}
           </div>
           <div className="bg-secondary/50 rounded-xl p-4 text-center">
-            <span className="text-sm text-muted-foreground block mb-1">PROBABILIDAD</span>
-            <span className="font-mono text-3xl font-bold text-primary">{signal.probability}%</span>
+            <span className="text-sm text-muted-foreground block mb-1">STAKE</span>
+            <span className="font-mono text-3xl font-bold text-primary">{signal.stake}/10</span>
           </div>
         </div>
 
@@ -147,7 +161,7 @@ const SignalCard = ({ signal, index, isLocked = false, onUnlock }: SignalCardPro
             <div className="flex items-center gap-2 mb-5 p-3 bg-accent/5 border border-accent/20 rounded-xl">
               <Zap className="h-4 w-4 text-accent flex-shrink-0" />
               <span className="text-sm text-muted-foreground">
-                <span className="text-accent font-medium">Detectado por Scanner:</span> {signal.betType}
+                <span className="text-accent font-medium">Detectado por Scanner:</span> {signal.market}
               </span>
             </div>
 

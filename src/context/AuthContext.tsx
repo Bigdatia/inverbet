@@ -51,42 +51,53 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const initializeAuth = async () => {
+      console.log("Auth: Initializing...");
       setLoading(true);
       
-      // Safety timeout to prevent infinite loading
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Auth timeout")), 8000)
-      );
+      // Failsafe: Force stop loading after 8s no matter what
+      const failsafeTimer = setTimeout(() => {
+          console.warn("Auth: Failsafe triggered, forcing loading=false");
+          setLoading(false);
+      }, 8000);
 
       try {
-        await Promise.race([
-          (async () => {
-              const { data: { session } } = await supabase.auth.getSession();
-              
-              if (session) {
-                setSession(session);
-                setUser(session.user);
-                const userProfile = await fetchProfile(session.user.id);
-                setProfile(userProfile);
-              } else {
-                setSession(null);
-                setUser(null);
-                setProfile(null);
-              }
-          })(),
-          timeoutPromise
-        ]);
-      } catch (error) {
-        console.error("Auth initialization error or timeout:", error);
-        // Fallback: don't kill session immediately on timeout, just stop loading.
-        // If session exists but profile failed, they will be in "Free" state temporarily.
-        // We will try to refetch on window focus.
-        if (!session) {
-           setSession(null);
-           setUser(null);
+        console.log("Auth: Getting session...");
+        // 1. Get session first
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session) {
+          console.log("Auth: Session found:", session.user.id);
+          setSession(session);
+          setUser(session.user);
+          
+          // 2. Fetch profile
+          try {
+             console.log("Auth: Fetching profile...");
+             const profilePromise = fetchProfile(session.user.id);
+             const timeoutPromise = new Promise<Profile | null>((resolve) => 
+               setTimeout(() => resolve(null), 5000) 
+             );
+             
+             const userProfile = await Promise.race([profilePromise, timeoutPromise]);
+             console.log("Auth: Profile result:", userProfile ? "Found" : "Null (or timed out)");
+             setProfile(userProfile);
+          } catch (profileError) {
+             console.error("Auth: Profile error:", profileError);
+          }
+        } else {
+          console.log("Auth: No session found");
+          setSession(null);
+          setUser(null);
+          setProfile(null);
         }
-        // Keep existing session if any, but profile might be null.
+      } catch (error) {
+        console.error("Auth: Critical error:", error);
+        setSession(null);
+        setUser(null);
+        setProfile(null);
       } finally {
+        console.log("Auth: Initialization done, setting loading=false");
+        clearTimeout(failsafeTimer);
         setLoading(false);
       }
     };

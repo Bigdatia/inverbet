@@ -17,79 +17,41 @@ const filters = [
   { id: "high", label: "Alta Probabilidad" },
 ];
 
-// Mock signals data
-const mockSignals = [
-  {
-    id: "1",
-    time: "14:30",
-    league: "Premier League",
-    teamA: "Manchester City",
-    teamB: "Liverpool",
-    odds: 2.1,
-    probability: 85,
-    betType: "Valor en Over 2.5 Goles",
-    analysis: "El algoritmo ha detectado una discrepancia entre las cuotas del mercado y la probabilidad real basada en datos históricos. Ambos equipos han marcado en el 87% de sus últimos enfrentamientos, y el promedio de goles es de 3.2 por partido.",
-    confidence: "high" as const,
-  },
-  {
-    id: "2",
-    time: "16:00",
-    league: "La Liga",
-    teamA: "Real Madrid",
-    teamB: "Barcelona",
-    odds: 1.95,
-    probability: 78,
-    betType: "Ambos Equipos Marcan: Sí",
-    analysis: "En los últimos 10 clásicos, ambos equipos han marcado en 8 ocasiones. Las cuotas actuales sugieren una oportunidad de valor dado el rendimiento ofensivo de ambos equipos esta temporada.",
-    confidence: "high" as const,
-  },
-  {
-    id: "3",
-    time: "18:45",
-    league: "Serie A",
-    teamA: "Juventus",
-    teamB: "AC Milan",
-    odds: 2.45,
-    probability: 72,
-    betType: "Más de 1.5 Goles Primera Parte",
-    analysis: "Ambos equipos tienen un inicio de partido agresivo. El 65% de los goles de Juventus y el 58% de los goles de Milan se producen en la primera mitad.",
-    confidence: "medium" as const,
-  },
-  {
-    id: "4",
-    time: "20:00",
-    league: "Bundesliga",
-    teamA: "Bayern Munich",
-    teamB: "Borussia Dortmund",
-    odds: 1.75,
-    probability: 82,
-    betType: "Victoria Local",
-    analysis: "Bayern Munich tiene un 78% de victorias en casa esta temporada. Contra rivales directos, su rendimiento sube al 85%. Las cuotas actuales ofrecen valor.",
-    confidence: "high" as const,
-  },
-];
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+// ... (keep filters array)
 
 const Scanner = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isPro } = useAuth();
   const [activeFilter, setActiveFilter] = useState("all");
-  const [loading, setLoading] = useState(true);
-  const [signals, setSignals] = useState(mockSignals);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
-  useEffect(() => {
-    // Simulate loading
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, []);
+  // Fetch signals from Supabase
+  const { data: signals = [], isLoading: loading } = useQuery({
+    queryKey: ["signals"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("signals")
+        .select("*")
+        .order("created_at", { ascending: false });
+      
+      if (error) {
+        console.error("Error fetching signals", error);
+        return [];
+      }
+      return data;
+    },
+  });
 
   const filteredSignals = signals.filter((signal) => {
     if (activeFilter === "all") return true;
     if (activeFilter === "high") return signal.confidence === "high";
-    // Add more filters as needed
+    if (activeFilter === "football") return signal.sport === "futbol";
+    if (activeFilter === "tennis") return signal.sport === "tenis";
+    if (activeFilter === "basketball") return signal.sport === "basket";
     return true;
   });
 
