@@ -76,12 +76,14 @@ const Auth = () => {
       newErrors.email = t.auth.errors.invalid_email;
     }
     
-    const passwordResult = passwordSchema.safeParse(password);
-    if (!passwordResult.success) {
-      newErrors.password = t.auth.errors.invalid_password;
+    if (!isResetMode) {
+      const passwordResult = passwordSchema.safeParse(password);
+      if (!passwordResult.success) {
+        newErrors.password = t.auth.errors.invalid_password;
+      }
     }
 
-    if (!isLogin && !fullName.trim()) {
+    if (!isLogin && !isResetMode && !fullName.trim()) {
       newErrors.fullName = "El nombre completo es requerido";
     }
     
@@ -89,13 +91,15 @@ const Auth = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const [isResetMode, setIsResetMode] = useState(false);
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validate()) return;
     
     // Validate terms acceptance for signup
-    if (!isLogin && !acceptedTerms) {
+    if (!isLogin && !acceptedTerms && !isResetMode) {
       setTermsError(true);
       setTimeout(() => setTermsError(false), 2000);
       return;
@@ -104,7 +108,26 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      if (isLogin) {
+      if (isResetMode) {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/update-password`,
+        });
+        
+        if (error) {
+          toast({
+            title: t.auth.errors.error_title,
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Correo enviado",
+            description: "Revisa tu bandeja de entrada para restablecer tu contraseña.",
+          });
+          setIsResetMode(false);
+          setIsLogin(true);
+        }
+      } else if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -216,17 +239,23 @@ const Auth = () => {
         <div className="bg-card border border-border rounded-2xl p-8">
           <div className="text-center mb-8">
             <h1 className="font-display text-2xl font-bold mb-2">
-              {isLogin ? t.auth.welcome_back : t.auth.create_account}
+              {isResetMode 
+                ? "Recuperar Contraseña" 
+                : isLogin 
+                  ? t.auth.welcome_back 
+                  : t.auth.create_account}
             </h1>
             <p className="text-muted-foreground">
-              {isLogin
-                ? t.auth.login_subtitle
-                : t.auth.register_subtitle}
+              {isResetMode
+                ? "Ingresa tu email para recibir un enlace de recuperación."
+                : isLogin
+                  ? t.auth.login_subtitle
+                  : t.auth.register_subtitle}
             </p>
           </div>
 
           <form onSubmit={handleAuth} className="space-y-5">
-            {!isLogin && (
+            {!isLogin && !isResetMode && (
               <div className="space-y-2">
                 <Label htmlFor="fullName" className="text-sm font-medium">
                   Nombre Completo
@@ -267,36 +296,52 @@ const Auth = () => {
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-medium">
-                {t.auth.password_label}
-              </Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="pl-10 pr-10 h-12 bg-secondary border-border focus:border-primary"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5" />
-                  ) : (
-                    <Eye className="h-5 w-5" />
+            {!isResetMode && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-sm font-medium">
+                    {t.auth.password_label}
+                  </Label>
+                  {isLogin && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsResetMode(true);
+                        setErrors({});
+                      }}
+                      className="text-xs text-primary hover:underline"
+                    >
+                      ¿Olvidaste tu contraseña?
+                    </button>
                   )}
-                </button>
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="pl-10 pr-10 h-12 bg-secondary border-border focus:border-primary"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="text-destructive text-sm">{errors.password}</p>
+                )}
               </div>
-              {errors.password && (
-                <p className="text-destructive text-sm">{errors.password}</p>
-              )}
-            </div>
+            )}
 
             {/* Terms checkbox - only show on signup */}
             {!isLogin && (
@@ -346,6 +391,8 @@ const Auth = () => {
             >
               {loading ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
+              ) : isResetMode ? (
+                "Enviar correo de recuperación"
               ) : isLogin ? (
                 t.auth.login_btn
               ) : (
@@ -356,19 +403,38 @@ const Auth = () => {
 
           <div className="mt-6 text-center">
             <p className="text-muted-foreground">
-              {isLogin ? t.auth.no_account : t.auth.yes_account}{" "}
-              <button
-                type="button"
-                onClick={() => {
-                  setIsLogin(!isLogin);
-                  setErrors({});
-                  setAcceptedTerms(false);
-                  setTermsError(false);
-                }}
-                className="text-primary hover:underline font-medium"
-              >
-                {isLogin ? t.auth.register_link : t.auth.login_link}
-              </button>
+              {isResetMode ? (
+                <>
+                  ¿Ya recordaste tu contraseña?{" "}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsResetMode(false);
+                      setIsLogin(true);
+                      setErrors({});
+                    }}
+                    className="text-primary hover:underline font-medium"
+                  >
+                    Volver al login
+                  </button>
+                </>
+              ) : (
+                <>
+                  {isLogin ? t.auth.no_account : t.auth.yes_account}{" "}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsLogin(!isLogin);
+                      setErrors({});
+                      setAcceptedTerms(false);
+                      setTermsError(false);
+                    }}
+                    className="text-primary hover:underline font-medium"
+                  >
+                    {isLogin ? t.auth.register_link : t.auth.login_link}
+                  </button>
+                </>
+              )}
             </p>
           </div>
         </div>

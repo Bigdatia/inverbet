@@ -11,10 +11,13 @@ import { LanguageProvider } from "./context/LanguageContext";
 import { Loader2 } from "lucide-react";
 import AdminRoute from "./components/admin/AdminRoute";
 
-// Lazy loading pages
-const Index = lazy(() => import("./pages/Index"));
-const Auth = lazy(() => import("./pages/Auth"));
-const TermsOfService = lazy(() => import("./pages/TermsOfService"));
+const UpdatePassword = lazy(() => import("./pages/UpdatePassword"));
+
+// ... (inside Routes)
+                  <Route path="/" element={<Index />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/update-password" element={<UpdatePassword />} />
+                  <Route path="/terms" element={<TermsOfService />} />
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const DashboardLayout = lazy(() => import("./components/dashboard/DashboardLayout"));
 const Scanner = lazy(() => import("./pages/dashboard/Scanner"));
