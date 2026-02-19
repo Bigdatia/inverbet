@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Outlet, useLocation } from "react-router-dom";
+import { useNavigate, Outlet, useLocation, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -34,15 +34,8 @@ const DashboardLayout = () => {
     );
   }
 
-  // Redirect if not authenticated (AuthContext handles state, but we might want explicit redirect here if it's not handled by a route guard)
-  // Actually, DashboardLayout is a protected route usually, but let's check. 
-  // In App.tsx it's just a Route. AuthContext doesn't auto-redirect unless we call something.
-  // The original code handled redirect in useEffect.
   if (!user && !loading) {
-     // useAuth doesn't automatically redirect, so we should do it here or in a useEffect.
-     // Better to use a ProtectedRoute component, but strictly refactoring this file:
-     // We can just return null and useEffect redirect?
-     // Or render Navigate.
+     return <Navigate to="/auth" replace />;
   }
 
   // Effect for redirect
