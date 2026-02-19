@@ -23,6 +23,7 @@ const platformItems = [
 
 const adminItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
+  { icon: Radar, label: "Gestión Scanner", path: "/admin/scanner-management" },
   { icon: Users, label: "Usuarios", path: "/admin/users" },
   { icon: FileText, label: "Registros", path: "/admin/registrations" },
 ];
