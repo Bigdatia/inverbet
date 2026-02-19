@@ -78,7 +78,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         ]);
       } catch (error) {
         console.error("Auth initialization error or timeout:", error);
-        // Fallback to "no user" state
+        // Fallback to "no user" state to avoid stuck loading
+        if (session) {
+           console.log("Session exists but profile fetch failed/timed out. Forcing logout to clear state.");
+           await supabase.auth.signOut();
+        }
         setSession(null);
         setUser(null);
         setProfile(null);
@@ -97,7 +101,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
          // Fetch profile if we don't have it or if the user changed
          if (!profile || session.user.id !== user?.id) {
             const userProfile = await fetchProfile(session.user.id);
-            setProfile(userProfile);
+            
+            if (!userProfile) {
+                console.error("User authenticated but profile not found. Signing out.");
+                await supabase.auth.signOut();
+                setSession(null);
+                setUser(null);
+                setProfile(null);
+            } else {
+                setProfile(userProfile);
+            }
          }
       } else {
         setProfile(null);
