@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       // Safety timeout to prevent infinite loading
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Auth timeout")), 5000)
+        setTimeout(() => reject(new Error("Auth timeout")), 8000)
       );
 
       try {
@@ -78,14 +78,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         ]);
       } catch (error) {
         console.error("Auth initialization error or timeout:", error);
-        // Fallback to "no user" state to avoid stuck loading
-        if (session) {
-           console.log("Session exists but profile fetch failed/timed out. Forcing logout to clear state.");
-           await supabase.auth.signOut();
+        // Fallback: don't kill session immediately on timeout, just stop loading.
+        // If session exists but profile failed, they will be in "Free" state temporarily.
+        // We will try to refetch on window focus.
+        if (!session) {
+           setSession(null);
+           setUser(null);
         }
-        setSession(null);
-        setUser(null);
-        setProfile(null);
+        // Keep existing session if any, but profile might be null.
       } finally {
         setLoading(false);
       }
@@ -167,6 +167,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       supabase.removeChannel(channel);
     };
   }, [user]);
+
+  // Fallback: Re-validate profile on window focus to ensure data is fresh
+  useEffect(() => {
+    const handleFocus = async () => {
+       if (user && !loading) {
+          // console.log("Window focused, re-validating profile...");
+          const freshProfile = await fetchProfile(user.id);
+          if (freshProfile) {
+              const currentProfile = profileRef.current;
+              // Also check for plan change here as a backup to Realtime
+              if (currentProfile && freshProfile.subscription_tier !== currentProfile.subscription_tier) {
+                 toast.info("Tu plan ha sido actualizado. Por favor inicia sesión nuevamente.");
+                 setTimeout(() => signOut(), 2000);
+              } else {
+                 setProfile(freshProfile);
+              }
+          }
+       }
+    };
+
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, [user, loading]);
 
   const signOut = async () => {
     await supabase.auth.signOut();
