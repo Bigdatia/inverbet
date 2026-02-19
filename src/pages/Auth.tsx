@@ -124,6 +124,19 @@ const Auth = () => {
               variant: "destructive",
             });
           }
+        } else {
+           // Manually navigate on success to ensure feedback
+           const { data: profile } = await supabase
+             .from('profiles')
+             .select('role')
+             .eq('id', (await supabase.auth.getUser()).data.user?.id)
+             .single();
+             
+           if (profile?.role === 'admin') {
+             navigate("/admin");
+           } else {
+             navigate("/dashboard");
+           }
         }
       } else {
         const { error } = await supabase.auth.signUp({

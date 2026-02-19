@@ -4,9 +4,12 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/context/LanguageContext";
 import { Globe, User } from "lucide-react";
 
+import { useAuth } from "@/context/AuthContext";
+
 const Navbar = () => {
   const navigate = useNavigate();
   const { t, language, setLanguage } = useLanguage();
+  const { user, isPro } = useAuth();
 
   const toggleLanguage = () => {
     setLanguage(language === "es" ? "en" : "es");
@@ -51,12 +54,21 @@ const Navbar = () => {
           </Button>
           <Button
             onClick={() => {
+              if (!user) {
+                navigate("/auth?mode=signup");
+                return;
+              }
+              
+              if (isPro) {
+                navigate("/dashboard");
+                return;
+              }
+
               const pricingSection = document.getElementById("pricing");
               if (pricingSection) {
                 pricingSection.scrollIntoView({ behavior: "smooth" });
               } else {
                 navigate("/");
-                // Small delay to allow navigation to complete before scrolling
                 setTimeout(() => {
                   document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" });
                 }, 100);
@@ -64,7 +76,7 @@ const Navbar = () => {
             }}
             className="hidden sm:flex bg-primary text-primary-foreground hover:bg-primary/90 font-semibold glow-green"
           >
-            {t.navbar.subscribe}
+            {isPro ? "Ir al Dashboard" : t.navbar.subscribe}
           </Button>
           
         </div>

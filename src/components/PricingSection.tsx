@@ -5,8 +5,11 @@ import { useCheckout } from "@/context/CheckoutContext";
 import { useTRM, formatCurrencyCOP } from "@/hooks/useTRM";
 import { useLanguage } from "@/context/LanguageContext";
 
+import { useAuth } from "@/context/AuthContext";
+
 const PricingSection = () => {
   const { openCheckout } = useCheckout();
+  const { user } = useAuth();
   const { data: trm, isLoading } = useTRM();
   const { t } = useLanguage();
   const priceUSD = 20;
@@ -93,7 +96,17 @@ const PricingSection = () => {
             {/* CTA Button */}
             <Button
               size="lg"
-              onClick={openCheckout}
+              onClick={() => {
+                if (!user) {
+                  // Redirect to signup if not logged in
+                  // We can pass a state or query param to know we came from pricing? 
+                  // For now just simple redirect.
+                  // Actually, user wants "redireccione a al registro de correo"
+                  window.location.href = "/auth?mode=signup";
+                } else {
+                  openCheckout();
+                }
+              }}
               className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-lg py-6 glow-green-strong uppercase"
             >
               {t.pricing.subscribe_btn}

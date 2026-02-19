@@ -41,11 +41,11 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <LanguageProvider>
       <TooltipProvider>
-        <CheckoutProvider>
-          <AuthProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <CheckoutProvider>
+            <AuthProvider>
+              <Toaster />
+              <Sonner />
               <ScrollToTop />
               <Suspense fallback={<PageLoader />}>
                 <Routes>
@@ -79,9 +79,9 @@ const App = () => (
                 </Routes>
               </Suspense>
               <CookieConsentBanner />
-            </BrowserRouter>
-          </AuthProvider>
-        </CheckoutProvider>
+            </AuthProvider>
+          </CheckoutProvider>
+        </BrowserRouter>
       </TooltipProvider>
     </LanguageProvider>
   </QueryClientProvider>

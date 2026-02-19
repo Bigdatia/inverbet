@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { Play, Lock, CheckCircle, Clock, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
+import { PaymentFormContent } from "@/components/checkout/ManualPaymentForm";
 
 const modules = [
   {
@@ -46,8 +48,46 @@ const modules = [
 ];
 
 const Academy = () => {
+  const { isPro } = useAuth();
   const completedModules = modules.filter((m) => m.status === "completed").length;
   const totalProgress = Math.round((completedModules / modules.length) * 100);
+
+  if (!isPro) {
+    return (
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="border border-primary/20 bg-secondary/10 rounded-2xl overflow-hidden relative min-h-[600px] flex items-center justify-center"
+      >
+        {/* Blurred Background Effect */}
+        <div className="absolute inset-0 z-0 opacity-10 pointer-events-none overflow-hidden filter blur-sm">
+           <div className="space-y-4 p-8">
+              {modules.slice(0, 3).map((module) => (
+                  <div key={module.id} className="h-24 bg-card rounded-xl border border-border" />
+              ))}
+           </div>
+        </div>
+        
+        <div className="relative z-10 p-6 md:p-8 w-full max-w-2xl">
+           <div className="text-center mb-8">
+              <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-full mb-4">
+                <Lock className="h-8 w-8 text-primary" />
+              </div>
+              <h2 className="text-2xl font-display font-bold mb-2">
+                Inverbet Academy Pro
+              </h2>
+              <p className="text-muted-foreground">
+                Desbloquea el curso completo de estrategia y gestión de capital.
+              </p>
+           </div>
+
+           <div className="bg-black/60 backdrop-blur-xl border border-border/50 rounded-xl overflow-hidden">
+              <PaymentFormContent embedded />
+           </div>
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <div className="space-y-6">

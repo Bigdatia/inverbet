@@ -4,6 +4,9 @@ import { motion } from "framer-motion";
 import SignalCard from "@/components/dashboard/SignalCard";
 import SignalCardSkeleton from "@/components/dashboard/SignalCardSkeleton";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
+import { PaymentFormContent } from "@/components/checkout/ManualPaymentForm";
+import { Lock } from "lucide-react";
 
 const filters = [
   { id: "all", label: "Todos" },
@@ -68,6 +71,7 @@ const mockSignals = [
 const Scanner = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isPro } = useAuth();
   const [activeFilter, setActiveFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [signals, setSignals] = useState(mockSignals);
@@ -132,20 +136,56 @@ const Scanner = () => {
       </motion.div>
 
       {/* Signals Grid */}
-      <div className="grid gap-4 md:grid-cols-2">
-        {loading ? (
-          <>
-            <SignalCardSkeleton />
-            <SignalCardSkeleton />
-            <SignalCardSkeleton />
-            <SignalCardSkeleton />
-          </>
-        ) : (
-          filteredSignals.map((signal, index) => (
-            <SignalCard key={signal.id} signal={signal} index={index} />
-          ))
-        )}
-      </div>
+      {/* Signals Grid or Payment Wall */}
+      {!isPro ? (
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="border border-primary/20 bg-secondary/10 rounded-2xl overflow-hidden relative"
+        >
+          {/* Blurred Background Effect */}
+          <div className="absolute inset-0 z-0 opacity-20 pointer-events-none overflow-hidden">
+             <div className="grid gap-4 md:grid-cols-2 p-4 filter blur-sm">
+                {mockSignals.slice(0, 4).map((signal, index) => (
+                  <SignalCard key={signal.id} signal={signal} index={index} />
+                ))}
+             </div>
+          </div>
+          
+          <div className="relative z-10 p-6 md:p-8">
+             <div className="text-center mb-8">
+                <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-full mb-4">
+                  <Lock className="h-8 w-8 text-primary" />
+                </div>
+                <h2 className="text-2xl font-display font-bold mb-2">
+                  Desbloquea el Scanner Pro
+                </h2>
+                <p className="text-muted-foreground max-w-lg mx-auto">
+                  Obtén acceso ilimitado a las señales de alta probabilidad, análisis detallados y estadísticas en tiempo real.
+                </p>
+             </div>
+
+             <div className="max-w-2xl mx-auto bg-black/60 backdrop-blur-xl border border-border/50 rounded-xl overflow-hidden">
+                <PaymentFormContent embedded />
+             </div>
+          </div>
+        </motion.div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          {loading ? (
+            <>
+              <SignalCardSkeleton />
+              <SignalCardSkeleton />
+              <SignalCardSkeleton />
+              <SignalCardSkeleton />
+            </>
+          ) : (
+            filteredSignals.map((signal, index) => (
+              <SignalCard key={signal.id} signal={signal} index={index} />
+            ))
+          )}
+        </div>
+      )}
 
       {/* Academy Banner */}
       <motion.div

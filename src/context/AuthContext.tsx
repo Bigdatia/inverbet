@@ -6,6 +6,8 @@ import { useNavigate } from "react-router-dom";
 interface Profile {
   role: "admin" | "user" | null;
   full_name: string | null;
+  subscription_tier: "free" | "premium" | null;
+  subscription_status: "active" | "inactive" | "canceled" | null;
 }
 
 interface AuthContextType {
@@ -15,6 +17,7 @@ interface AuthContextType {
   loading: boolean;
   signOut: () => Promise<void>;
   isAdmin: boolean;
+  isPro: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,7 +33,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('role, full_name')
+        .select('*')
         .eq('id', userId)
         .single();
       
@@ -99,7 +102,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       profile, 
       loading, 
       signOut,
-      isAdmin: profile?.role === 'admin' 
+      isAdmin: profile?.role === 'admin',
+      isPro: profile?.subscription_tier === 'premium' || false
     }}>
       {children}
     </AuthContext.Provider>
