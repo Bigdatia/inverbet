@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface Profile {
   role: "admin" | "user" | null;
@@ -122,8 +123,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           filter: `id=eq.${user.id}`,
         },
         (payload) => {
-          // console.log("Realtime profile update:", payload.new);
-          setProfile(payload.new as Profile);
+          const newProfile = payload.new as Profile;
+          
+          // Check if subscription tier changed and force logout if it did
+          if (profile && newProfile.subscription_tier !== profile.subscription_tier) {
+             console.log("Subscription tier changed, forcing logout to ensure clean state");
+             toast.info("Tu plan ha sido actualizado. Por favor inicia sesión nuevamente.");
+             
+             // Wait a moment for the toast to be seen, then logout
+             setTimeout(() => {
+                signOut();
+             }, 2000);
+          } else {
+             // Just update the profile in place
+             setProfile(newProfile);
+          }
         }
       )
       .subscribe();
