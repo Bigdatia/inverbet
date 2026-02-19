@@ -26,6 +26,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminLayout = lazy(() => import("./components/admin/AdminLayout"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const UserManagement = lazy(() => import("./pages/admin/UserManagement"));
+const ScannerManagement = lazy(() => import("./pages/admin/ScannerManagement"));
 const Registrations = lazy(() => import("./pages/admin/Registrations"));
 
 const queryClient = new QueryClient();
@@ -67,6 +68,7 @@ const App = () => (
                     <Route path="/admin" element={<AdminLayout />}>
                       <Route index element={<AdminDashboard />} />
                       <Route path="users" element={<UserManagement />} />
+                      <Route path="scanner-management" element={<ScannerManagement />} />
                       <Route path="registrations" element={<Registrations />} />
                       
                       {/* Unified Platform Routes for Admin */}
