@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useRef, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
@@ -108,6 +108,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Keep a ref to the profile to access it inside the subscription callback without re-subscribing
+  const profileRef = useRef(profile);
+  
+  useEffect(() => {
+    profileRef.current = profile;
+  }, [profile]);
+
   // Realtime subscription for profile changes
   useEffect(() => {
     if (!user) return;
@@ -124,9 +131,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         },
         (payload) => {
           const newProfile = payload.new as Profile;
+          const currentProfile = profileRef.current;
           
           // Check if subscription tier changed and force logout if it did
-          if (profile && newProfile.subscription_tier !== profile.subscription_tier) {
+          if (currentProfile && newProfile.subscription_tier !== currentProfile.subscription_tier) {
              console.log("Subscription tier changed, forcing logout to ensure clean state");
              toast.info("Tu plan ha sido actualizado. Por favor inicia sesión nuevamente.");
              
