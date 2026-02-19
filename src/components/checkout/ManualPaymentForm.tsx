@@ -37,7 +37,7 @@ export const PaymentFormContent = ({ onSuccess, embedded = false }: PaymentFormP
   const PAYPAL_EMAIL = "pagos@inverbet.com";
   const BINANCE_PAY_ID = "000000000"; // Placeholder
   const BINANCE_USDT_ADDRESS = "TRC20: Txxxxxxxxxxxxxxxxxxxxxx"; // Placeholder
-  const BINANCE_USDT_ADDRESS = "TRC20: Txxxxxxxxxxxxxxxxxxxxxx"; // Placeholder
+
   const BRE_B_KEY = "@alvaro991";
   const AMOUNT_USD = 20;
   const priceCOP = trm ? AMOUNT_USD * trm : 0;
