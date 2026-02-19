@@ -2,7 +2,9 @@ import { motion } from "framer-motion";
 import { Play, Lock, CheckCircle, Clock, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
-import { PaymentFormContent } from "@/components/checkout/ManualPaymentForm";
+import ManualPaymentForm from "@/components/checkout/ManualPaymentForm";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 const modules = [
   {
@@ -49,45 +51,11 @@ const modules = [
 
 const Academy = () => {
   const { isPro } = useAuth();
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const completedModules = modules.filter((m) => m.status === "completed").length;
   const totalProgress = Math.round((completedModules / modules.length) * 100);
 
-  if (!isPro) {
-    return (
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="border border-primary/20 bg-secondary/10 rounded-2xl overflow-hidden relative min-h-[600px] flex items-center justify-center"
-      >
-        {/* Blurred Background Effect */}
-        <div className="absolute inset-0 z-0 opacity-10 pointer-events-none overflow-hidden filter blur-sm">
-           <div className="space-y-4 p-8">
-              {modules.slice(0, 3).map((module) => (
-                  <div key={module.id} className="h-24 bg-card rounded-xl border border-border" />
-              ))}
-           </div>
-        </div>
-        
-        <div className="relative z-10 p-6 md:p-8 w-full max-w-2xl">
-           <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-full mb-4">
-                <Lock className="h-8 w-8 text-primary" />
-              </div>
-              <h2 className="text-2xl font-display font-bold mb-2">
-                Inverbet Academy Pro
-              </h2>
-              <p className="text-muted-foreground">
-                Desbloquea el curso completo de estrategia y gestión de capital.
-              </p>
-           </div>
 
-           <div className="bg-black/60 backdrop-blur-xl border border-border/50 rounded-xl overflow-hidden">
-              <PaymentFormContent embedded />
-           </div>
-        </div>
-      </motion.div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -131,12 +99,15 @@ const Academy = () => {
         </div>
       </motion.div>
 
-      {/* Modules List */}
       <div className="space-y-3">
         {modules.map((module, index) => {
-          const isLocked = module.status === "locked";
-          const isCompleted = module.status === "completed";
-          const isAvailable = module.status === "available";
+          // Logic: First module (index 0) is free. All others (index > 0) require Pro.
+          // If isPro is true, everything is unlocked (unless module itself is 'locked' by default in data, but let's assume Pro unlocks all 'content' gating).
+          // Actually, let's override the mock data 'status' with our real logic.
+          
+          const isLocked = !isPro && index > 0;
+          const isCompleted = module.status === "completed"; // Keep mock status for now or assume 0
+          const isAvailable = !isLocked;
 
           return (
             <motion.div
@@ -145,13 +116,13 @@ const Academy = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               className={cn(
-                "bg-card border rounded-xl p-5 transition-all duration-300",
+                "bg-card border rounded-xl overflow-hidden transition-all duration-300 relative",
                 isLocked
-                  ? "border-border/50 opacity-60"
+                  ? "border-border/50"
                   : "border-border hover:border-primary/40 cursor-pointer hover:shadow-[0_0_20px_rgba(213,252,107,0.08)]"
               )}
             >
-              <div className="flex items-center gap-4">
+              <div className={cn("p-5 flex items-center gap-4", isLocked && "filter blur-sm select-none opacity-50")}>
                 {/* Module Number / Status */}
                 <div
                   className={cn(
@@ -176,9 +147,9 @@ const Academy = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="font-display font-bold truncate">{module.title}</h3>
-                    {isAvailable && !isCompleted && (
+                    {isAvailable && !isCompleted && index === 0 && (
                       <span className="text-xs px-2 py-0.5 bg-accent/20 text-accent rounded-full font-medium">
-                        Nuevo
+                        Gratis
                       </span>
                     )}
                   </div>
@@ -194,9 +165,27 @@ const Academy = () => {
                 </div>
               </div>
 
-              {/* Progress Bar (if in progress) */}
-              {module.progress > 0 && module.progress < 100 && (
-                <div className="mt-4 pt-4 border-t border-border">
+               {/* Locked Overlay */}
+               {isLocked && (
+                 <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/10 backdrop-blur-[2px]">
+                   <div className="bg-background/80 p-4 rounded-xl border border-border shadow-lg flex flex-col items-center gap-3">
+                      <div className="flex items-center gap-2 text-primary font-bold">
+                        <Lock className="h-4 w-4" />
+                        <span>Contenido Premium</span>
+                      </div>
+                      <Button 
+                        onClick={() => setShowPaymentModal(true)}
+                        className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold glow-green"
+                      >
+                        Hazte PRO
+                      </Button>
+                   </div>
+                 </div>
+               )}
+
+              {/* Progress Bar (if in progress and not locked) */}
+              {!isLocked && module.progress > 0 && module.progress < 100 && (
+                <div className="mt-4 pt-4 border-t border-border mx-5 pb-5">
                   <div className="flex items-center gap-3">
                     <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
                       <div
@@ -214,6 +203,11 @@ const Academy = () => {
           );
         })}
       </div>
+
+      <ManualPaymentForm 
+        isOpen={showPaymentModal} 
+        onClose={() => setShowPaymentModal(false)} 
+      />
 
       {/* CTA */}
       <motion.div

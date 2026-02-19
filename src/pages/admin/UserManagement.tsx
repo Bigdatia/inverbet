@@ -42,6 +42,33 @@ const UserManagement = () => {
     fetchUsers();
   }, []);
 
+  const toggleSubscriptionTier = async (userId: string, isPro: boolean) => {
+    const newTier = isPro ? 'free' : 'premium'; // Toggle
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ subscription_tier: newTier })
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      setUsers(users.map((user: any) => 
+        user.id === userId ? { ...user, subscription_tier: newTier } : user
+      ));
+
+      toast({
+        title: "Plan actualizado",
+        description: `El usuario ahora es ${newTier === 'premium' ? 'PRO' : 'FREE'}.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const toggleUserStatus = async (userId: string, currentStatus: boolean) => {
     const newStatus = !currentStatus;
     try {
@@ -81,6 +108,7 @@ const UserManagement = () => {
               <TableHead>Email</TableHead>
               <TableHead>Rol</TableHead>
               <TableHead>Fecha Registro</TableHead>
+              <TableHead>Plan</TableHead>
               <TableHead>Último Pago</TableHead>
               <TableHead>Estado</TableHead>
             </TableRow>
@@ -91,6 +119,8 @@ const UserManagement = () => {
               const lastPaymentDate = new Date();
               lastPaymentDate.setDate(lastPaymentDate.getDate() - Math.floor(Math.random() * 30));
               
+              const isPro = user.subscription_tier === 'premium' || user.subscription_tier === 'pro';
+
               return (
                 <TableRow key={user.id}>
                   <TableCell className="font-medium">{user.full_name || 'N/A'}</TableCell>
@@ -110,6 +140,19 @@ const UserManagement = () => {
                       month: 'long',
                       day: 'numeric'
                     })}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                       <span className={`text-xs font-bold ${isPro ? 'text-green-500' : 'text-muted-foreground'}`}>
+                         {isPro ? 'PRO' : 'FREE'}
+                       </span>
+                       {user.role !== 'admin' && (
+                         <Switch
+                           checked={isPro}
+                           onCheckedChange={() => toggleSubscriptionTier(user.id, isPro)}
+                         />
+                       )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     {lastPaymentDate.toLocaleDateString('es-ES', {
