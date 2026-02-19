@@ -256,6 +256,9 @@ I am attaching my payment proof in this chat.`;
                             {t.payment_form.scan_text}<br/>
                             <span className="text-primary/80">{t.payment_form.mobile_instruction}</span>
                         </p>
+                        <p className="text-xs text-muted-foreground mt-2 font-medium">
+                            Llaves de Bre-B
+                        </p>
                     </div>
                 </div>
             )}

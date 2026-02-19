@@ -23,7 +23,7 @@ interface SignalCardProps {
   index: number;
 }
 
-const SignalCard = ({ signal, index }: SignalCardProps) => {
+const SignalCard = ({ signal, index, isLocked = false, onUnlock }: SignalCardProps & { isLocked?: boolean; onUnlock?: () => void }) => {
   const [expanded, setExpanded] = useState(false);
   const { toast } = useToast();
 
@@ -68,7 +68,7 @@ const SignalCard = ({ signal, index }: SignalCardProps) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.1 }}
       className={cn(
-        "bg-card border border-border rounded-2xl overflow-hidden transition-all duration-300",
+        "bg-card border border-border rounded-2xl overflow-hidden transition-all duration-300 relative group",
         "hover:border-primary/40 hover:shadow-[0_0_30px_rgba(213,252,107,0.1)]",
         expanded && "border-primary/50"
       )}
@@ -91,7 +91,7 @@ const SignalCard = ({ signal, index }: SignalCardProps) => {
       </div>
 
       {/* Main Content */}
-      <div className="p-5">
+      <div className="p-5 relative">
         {/* Match */}
         <div className="text-center mb-5">
           <h3 className="font-display text-lg md:text-xl font-bold">
@@ -103,9 +103,16 @@ const SignalCard = ({ signal, index }: SignalCardProps) => {
 
         {/* Key Data */}
         <div className="grid grid-cols-2 gap-4 mb-5">
-          <div className="bg-secondary/50 rounded-xl p-4 text-center">
+          <div className="bg-secondary/50 rounded-xl p-4 text-center relative overflow-hidden">
             <span className="text-sm text-muted-foreground block mb-1">CUOTA</span>
-            <span className="font-mono text-3xl font-bold text-primary">{signal.odds.toFixed(2)}</span>
+            <span className={cn("font-mono text-3xl font-bold text-primary", isLocked && "blur-md select-none")}>
+              {signal.odds.toFixed(2)}
+            </span>
+            {isLocked && (
+               <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+                 <span className="text-xs font-bold text-primary/50">PRO</span>
+               </div>
+            )}
           </div>
           <div className="bg-secondary/50 rounded-xl p-4 text-center">
             <span className="text-sm text-muted-foreground block mb-1">PROBABILIDAD</span>
@@ -113,44 +120,68 @@ const SignalCard = ({ signal, index }: SignalCardProps) => {
           </div>
         </div>
 
-        {/* AI Tag */}
-        <div className="flex items-center gap-2 mb-5 p-3 bg-accent/5 border border-accent/20 rounded-xl">
-          <Zap className="h-4 w-4 text-accent flex-shrink-0" />
-          <span className="text-sm text-muted-foreground">
-            <span className="text-accent font-medium">Detectado por Scanner:</span> {signal.betType}
-          </span>
-        </div>
+        {/* Actions / Locked State Overlay */}
+        {isLocked ? (
+          <div className="space-y-4">
+             {/* Fake hidden analysis/bet type to simulate content */}
+             <div className="flex items-center gap-2 mb-5 p-3 bg-accent/5 border border-accent/20 rounded-xl filter blur-sm select-none opacity-50">
+               <Zap className="h-4 w-4 text-accent flex-shrink-0" />
+               <span className="text-sm text-muted-foreground">
+                 <span className="text-accent font-medium">Detectado por Scanner:</span> Gana Local
+               </span>
+             </div>
 
-        {/* Actions */}
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            onClick={() => setExpanded(!expanded)}
-            className="flex-1 border-border hover:bg-secondary"
-          >
-            {expanded ? (
-              <>
-                <ChevronUp className="h-4 w-4 mr-2" />
-                Ocultar
-              </>
-            ) : (
-              <>
-                <ChevronDown className="h-4 w-4 mr-2" />
-                Ver Análisis
-              </>
-            )}
-          </Button>
-          <Button
-            onClick={copyBet}
-            className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 glow-green"
-          >
-            <Copy className="h-4 w-4 mr-2" />
-            Copiar Apuesta
-          </Button>
-        </div>
+             <Button 
+               onClick={onUnlock}
+               className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-bold py-6 text-lg shadow-[0_0_20px_rgba(37,211,102,0.2)]"
+             >
+               Hazte PRO
+             </Button>
+             <p className="text-xs text-center text-muted-foreground">
+               Desbloquea señales y análisis detallados
+             </p>
+          </div>
+        ) : (
+          <>
+            {/* AI Tag */}
+            <div className="flex items-center gap-2 mb-5 p-3 bg-accent/5 border border-accent/20 rounded-xl">
+              <Zap className="h-4 w-4 text-accent flex-shrink-0" />
+              <span className="text-sm text-muted-foreground">
+                <span className="text-accent font-medium">Detectado por Scanner:</span> {signal.betType}
+              </span>
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setExpanded(!expanded)}
+                className="flex-1 border-border hover:bg-secondary"
+              >
+                {expanded ? (
+                  <>
+                    <ChevronUp className="h-4 w-4 mr-2" />
+                    Ocultar
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="h-4 w-4 mr-2" />
+                    Ver Análisis
+                  </>
+                )}
+              </Button>
+              <Button
+                onClick={copyBet}
+                className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 glow-green"
+              >
+                <Copy className="h-4 w-4 mr-2" />
+                Copiar Apuesta
+              </Button>
+            </div>
+          </>
+        )}
 
         {/* Expanded Analysis */}
-        {expanded && (
+        {expanded && !isLocked && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
