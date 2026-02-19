@@ -29,7 +29,7 @@ export const PaymentFormContent = ({ onSuccess, embedded = false }: PaymentFormP
     fullName: "",
     email: "",
     idDocument: "",
-    paymentMethod: "bancolombia" as "bancolombia" | "paypal" | "binance",
+    paymentMethod: "bancolombia" as "bancolombia" | "paypal" | "binance" | "bre-b",
   });
 
   // TODO: Replace with real WhatsApp number and PayPal email
@@ -37,6 +37,8 @@ export const PaymentFormContent = ({ onSuccess, embedded = false }: PaymentFormP
   const PAYPAL_EMAIL = "pagos@inverbet.com";
   const BINANCE_PAY_ID = "000000000"; // Placeholder
   const BINANCE_USDT_ADDRESS = "TRC20: Txxxxxxxxxxxxxxxxxxxxxx"; // Placeholder
+  const BINANCE_USDT_ADDRESS = "TRC20: Txxxxxxxxxxxxxxxxxxxxxx"; // Placeholder
+  const BRE_B_KEY = "@alvaro991";
   const AMOUNT_USD = 20;
   const priceCOP = trm ? AMOUNT_USD * trm : 0;
   
@@ -79,6 +81,7 @@ export const PaymentFormContent = ({ onSuccess, embedded = false }: PaymentFormP
       let paymentMethodText = 'Bancolombia QR';
       if (formData.paymentMethod === 'paypal') paymentMethodText = 'PayPal';
       if (formData.paymentMethod === 'binance') paymentMethodText = 'Binance';
+      if (formData.paymentMethod === 'bre-b') paymentMethodText = 'Bre-B (@alvaro991)';
 
       // Construct message based on language
       let message = "";
@@ -187,7 +190,7 @@ I am attaching my payment proof in this chat.`;
           onValueChange={(val: "bancolombia" | "paypal" | "binance") =>
             setFormData((prev) => ({ ...prev, paymentMethod: val }))
           }
-          className="grid grid-cols-3 gap-3"
+          className="grid grid-cols-2 sm:grid-cols-4 gap-3"
         >
           <div>
             <RadioGroupItem value="bancolombia" id="bancolombia" className="peer sr-only" />
@@ -217,6 +220,16 @@ I am attaching my payment proof in this chat.`;
             >
               <Wallet className="mb-2 h-5 w-5 text-foreground" />
               <span className="text-[10px] sm:text-xs font-semibold text-foreground text-center">Binance</span>
+            </Label>
+          </div>
+          <div>
+            <RadioGroupItem value="bre-b" id="bre-b" className="peer sr-only" />
+            <Label
+              htmlFor="bre-b"
+              className="flex flex-col items-center justify-between rounded-md border-2 border-border/50 bg-secondary/20 p-2 hover:bg-secondary/40 peer-data-[state=checked]:border-[#7B1FA2] peer-data-[state=checked]:bg-[#7B1FA2]/10 cursor-pointer transition-all h-full"
+            >
+              <Wallet className="mb-2 h-5 w-5 text-foreground" />
+              <span className="text-[10px] sm:text-xs font-semibold text-foreground text-center">Bre-B</span>
             </Label>
           </div>
         </RadioGroup>
@@ -329,6 +342,33 @@ I am attaching my payment proof in this chat.`;
                     <div className="bg-secondary/20 p-3 rounded text-sm">
                         <span className="text-muted-foreground">{t.payment_form.amount_to_send}</span>
                         <span className="block text-xl font-bold text-white">$ {AMOUNT_USD} USDT</span>
+                    </div>
+                </div>
+            )}
+
+            {formData.paymentMethod === "bre-b" && (
+                <div className="space-y-4 py-4 w-full animate-in fade-in duration-300">
+                    <div className="w-16 h-16 bg-[#7B1FA2]/20 rounded-full flex items-center justify-center mx-auto text-[#7B1FA2]">
+                        <Wallet className="h-8 w-8" />
+                    </div>
+                    
+                    <div>
+                        <p className="text-sm text-muted-foreground">Llave Bre-B</p>
+                        <div className="flex items-center justify-center gap-2 mt-1">
+                            <p className="font-mono text-lg font-bold text-white select-all tracking-wider">
+                                {BRE_B_KEY}
+                            </p>
+                            <Button variant="ghost" size="icon" className="h-6 w-6" type="button" onClick={() => handleCopy(BRE_B_KEY, "Llave Bre-B")}>
+                                <Copy className="h-3 w-3" />
+                            </Button>
+                        </div>
+                    </div>
+
+                    <div className="bg-secondary/20 p-3 rounded text-sm">
+                        <span className="text-muted-foreground">{t.payment_form.amount_to_send}</span>
+                        <span className="block text-xl font-bold text-white">
+                           {trm ? formatCurrencyCOP(priceCOP) : t.pricing.loading_trm} COP
+                        </span>
                     </div>
                 </div>
             )}
