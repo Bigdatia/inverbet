@@ -25,11 +25,17 @@ const Profile = () => {
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('full_name')
+          .select('full_name, subscription_tier, subscription_status, subscription_start_date')
           .eq('id', user.id)
           .single();
         
-        setUser({ ...user, full_name: profile?.full_name });
+        setUser({ 
+            ...user, 
+            full_name: profile?.full_name,
+            subscription_tier: profile?.subscription_tier,
+            subscription_status: profile?.subscription_status,
+            subscription_start_date: profile?.subscription_start_date
+        });
       } else {
         setUser(null);
       }
@@ -110,6 +116,38 @@ const Profile = () => {
       })
     : "";
 
+  const getNextBillingDate = (startDateStr: string | null) => {
+    if (!startDateStr) return null;
+    const date = new Date(startDateStr);
+    date.setMonth(date.getMonth() + 1);
+    return date.toLocaleDateString("es-ES", {
+      year: "numeric",
+      month: "short",
+      day: "numeric"
+    });
+  };
+
+  const handleSignOutAll = async () => {
+    try {
+        setLoading(true);
+        // Deslogea en todos los dispositivos si `scope: global` es soportado.
+        const { error } = await supabase.auth.signOut({ scope: 'global' });
+        if (error) throw error;
+        toast({
+            title: "Sesiones cerradas",
+            description: "Se han cerrado todas las sesiones.",
+        });
+        window.location.href = '/auth';
+    } catch (error: any) {
+        console.error(error);
+        // Fallback preventivo
+        await supabase.auth.signOut();
+        window.location.href = '/auth';
+    } finally {
+        setLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-3xl">
       {/* Header */}
@@ -148,6 +186,7 @@ const Profile = () => {
       </motion.div>
 
       {/* Subscription Card */}
+      {user?.subscription_tier === 'premium' && user?.subscription_status === 'active' ? (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -186,37 +225,42 @@ const Profile = () => {
         <div className="flex items-center justify-between pt-4 border-t border-border">
           <div>
             <span className="text-muted-foreground text-sm">Próximo cobro:</span>
-            <p className="font-mono font-bold">$20 USD - 15 Feb 2026</p>
+            <p className="font-mono font-bold">$20 USD - {getNextBillingDate(user?.subscription_start_date) || "No disponible"}</p>
           </div>
-          <Button variant="outline" className="border-border">
-            Gestionar
-          </Button>
         </div>
       </motion.div>
-
-      {/* Payment Methods */}
+      ) : (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
+        transition={{ delay: 0.2 }}
         className="bg-card border border-border rounded-xl p-6"
       >
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-display font-bold">Método de Pago</h3>
-          <Button variant="outline" size="sm" className="border-border">
-            Cambiar
-          </Button>
-        </div>
-        <div className="flex items-center gap-4 p-4 bg-secondary rounded-lg">
-          <div className="w-12 h-8 bg-muted rounded flex items-center justify-center">
-            <CreditCard className="h-5 w-5 text-muted-foreground" />
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
+            <Crown className="h-5 w-5 text-muted-foreground" />
           </div>
           <div>
-            <p className="font-medium">•••• •••• •••• 4242</p>
-            <p className="text-xs text-muted-foreground">Expira 12/27</p>
+            <h3 className="font-display font-bold">Plan Gratuito</h3>
+            <p className="text-sm text-muted-foreground">Acceso limitado</p>
           </div>
         </div>
+        
+        <div className="flex justify-between items-center pt-4 border-t border-border mt-4">
+            <p className="text-sm text-muted-foreground">Mejora tu plan para acceder a todas las funciones.</p>
+            <Button 
+                onClick={() => {
+                  window.location.href = '/';
+                }}
+                className="bg-primary text-primary-foreground hover:bg-primary/90 glow-green"
+            >
+                Hazte Pro
+            </Button>
+        </div>
       </motion.div>
+      )}
+
+      {/* Payment Methods (Hidden) */}
 
       {/* Security */}
       <motion.div
@@ -299,9 +343,11 @@ const Profile = () => {
 
           <Button
             variant="outline"
+            onClick={handleSignOutAll}
+            disabled={loading}
             className="w-full justify-start border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
           >
-            Cerrar todas las sesiones
+            {loading ? "Cerrando sesiones..." : "Cerrar todas las sesiones"}
           </Button>
         </div>
         </div>
