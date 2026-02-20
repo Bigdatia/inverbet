@@ -51,11 +51,11 @@ const ScannerManagement = () => {
     type: "prematch",
     market: "",
     odds: "",
-    stake: "1",
-    confidence: "medium",
+    stake: "85", // represents probability now
+    confidence: "high",
     status: "pending",
     analysis: "",
-    is_premium: false
+    is_premium: true
   });
 
   const { data: signals, isLoading } = useQuery({
@@ -139,11 +139,11 @@ const ScannerManagement = () => {
       type: "prematch",
       market: "",
       odds: "",
-      stake: "1",
-      confidence: "medium",
+      stake: "85",
+      confidence: "high",
       status: "pending",
       analysis: "",
-      is_premium: false
+      is_premium: true
     });
   };
 
@@ -168,11 +168,11 @@ const ScannerManagement = () => {
       type: signal.type,
       market: signal.market,
       odds: signal.odds.toString(),
-      stake: signal.stake.toString(),
-      confidence: signal.confidence || "medium",
+      stake: signal.stake.toString(), // represents probability
+      confidence: signal.confidence || "high",
       status: signal.status || "pending",
       analysis: signal.analysis || "",
-      is_premium: signal.is_premium
+      is_premium: true // Always true now
     });
     setIsDialogOpen(true);
   };
@@ -201,11 +201,11 @@ const ScannerManagement = () => {
       type: formData.type,
       market: formData.market,
       odds: parseFloat(formData.odds),
-      stake: parseInt(formData.stake),
+      stake: parseInt(formData.stake), // Saving probability into stake column
       confidence: formData.confidence,
       status: formData.status,
       analysis: formData.analysis,
-      is_premium: formData.is_premium,
+      is_premium: true, // Force all to be premium
       created_at: matchDate,
     };
 
@@ -348,28 +348,28 @@ const ScannerManagement = () => {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Stake (1-10)</Label>
-                  <Select 
-                    value={formData.stake} 
-                    onValueChange={(val) => setFormData({...formData, stake: val})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[...Array(10)].map((_, i) => (
-                        <SelectItem key={i+1} value={(i+1).toString()}>{i+1}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label>Probabilidad (%)</Label>
+                  <Input 
+                    type="number"
+                    min="0"
+                    max="100"
+                    placeholder="85"
+                    value={formData.stake}
+                    onChange={(e) => {
+                      const prob = parseInt(e.target.value) || 0;
+                      // Auto-calculate confidence based on probability
+                      const newConfidence = prob >= 85 ? "high" : "medium";
+                      setFormData({...formData, stake: e.target.value, confidence: newConfidence});
+                    }}
+                  />
                 </div>
                  <div className="space-y-2">
-                  <Label>Confianza</Label>
+                  <Label>Confianza (Automática)</Label>
                   <Select 
-                    value={formData.confidence} 
-                    onValueChange={(val: any) => setFormData({...formData, confidence: val})}
+                    value={formData.confidence}
+                    disabled
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-muted">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -415,18 +415,7 @@ const ScannerManagement = () => {
                 />
               </div>
 
-              <div className="flex items-center justify-between p-4 bg-secondary/20 rounded-lg">
-                <div className="space-y-0.5">
-                  <Label>Señal Premium</Label>
-                  <p className="text-xs text-muted-foreground">Solo visible/desbloqueada para usuarios PRO</p>
-                </div>
-                <Switch 
-                  checked={formData.is_premium}
-                  onCheckedChange={(val) => setFormData({...formData, is_premium: val})}
-                />
-              </div>
-
-              <Button type="submit" className="w-full bg-primary text-black font-bold" disabled={createSignalMutation.isPending || updateSignalMutation.isPending}>
+              <Button type="submit" className="w-full bg-primary text-black font-bold mt-4" disabled={createSignalMutation.isPending || updateSignalMutation.isPending}>
                 {(createSignalMutation.isPending || updateSignalMutation.isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {editingId ? "Actualizar Señal" : "Publicar Señal"}
               </Button>
@@ -453,7 +442,7 @@ const ScannerManagement = () => {
               <TableHead>Deporte / Liga</TableHead>
               <TableHead>Partido</TableHead>
               <TableHead>Mercado / Cuota</TableHead>
-              <TableHead>Cnf/Stake/Estado</TableHead>
+              <TableHead>Prob/Confianza/Estado</TableHead>
               <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
@@ -500,7 +489,7 @@ const ScannerManagement = () => {
                             'bg-yellow-500/20 text-yellow-500'}`}>
                            {signal.confidence === 'high' ? 'Alta' : signal.confidence === 'low' ? 'Baja' : 'Media'}
                          </span>
-                         <span className="text-xs font-mono text-muted-foreground">Stake {signal.stake}</span>
+                         <span className="text-xs font-mono text-muted-foreground">Prob {signal.stake}%</span>
                       </div>
                       <span className={`inline-flex w-fit items-center px-2 py-0.5 rounded text-xs font-medium capitalize
                         ${signal.status === 'won' ? 'bg-green-500/10 text-green-500' : 

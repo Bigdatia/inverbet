@@ -127,11 +127,15 @@ const UserManagement = () => {
           </TableHeader>
           <TableBody>
             {users.map((user: any) => {
-              // Mock random date for last payment within the last 30 days
-              const lastPaymentDate = new Date();
-              lastPaymentDate.setDate(lastPaymentDate.getDate() - Math.floor(Math.random() * 30));
-              
               const isPro = user.subscription_tier === 'premium' || user.subscription_tier === 'pro';
+              
+              const lastPaymentDate = user.subscription_start_date 
+                ? new Date(user.subscription_start_date).toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })
+                : 'N/A';
 
               return (
                 <TableRow key={user.id}>
@@ -167,11 +171,7 @@ const UserManagement = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    {lastPaymentDate.toLocaleDateString('es-ES', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
+                    {lastPaymentDate}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">

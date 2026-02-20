@@ -129,8 +129,8 @@ const SignalCard = ({ signal, index, isLocked = false, onUnlock }: SignalCardPro
             )}
           </div>
           <div className="bg-secondary/50 rounded-xl p-4 text-center">
-            <span className="text-sm text-muted-foreground block mb-1">STAKE</span>
-            <span className="font-mono text-3xl font-bold text-primary">{signal.stake}/10</span>
+            <span className="text-sm text-muted-foreground block mb-1">PROBABILIDAD</span>
+            <span className="font-mono text-3xl font-bold text-primary">{signal.stake}%</span>
           </div>
         </div>
 
