@@ -54,11 +54,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.log("Auth: Initializing...");
       setLoading(true);
       
-      // Failsafe: Force stop loading after 8s no matter what
+      // Failsafe: Force stop loading after 5s no matter what and clear potentially corrupted storage
       const failsafeTimer = setTimeout(() => {
-          console.warn("Auth: Failsafe triggered, forcing loading=false");
+          console.warn("Auth: Failsafe triggered, forcing loading=false and clearing local storage to recover from potential corruption");
+          
+          // Clear Supabase specific local storage keys
+          try {
+            for (let i = 0; i < localStorage.length; i++) {
+              const key = localStorage.key(i);
+              if (key && key.startsWith('sb-')) {
+                localStorage.removeItem(key);
+              }
+            }
+          } catch (e) {
+            console.error("Auth: Failed to clear local storage", e);
+          }
+          
           setLoading(false);
-      }, 8000);
+      }, 5000);
 
       try {
         console.log("Auth: Getting session...");

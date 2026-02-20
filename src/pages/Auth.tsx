@@ -29,42 +29,32 @@ const Auth = () => {
   const { t } = useLanguage();
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (session?.user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', session.user.id)
-            .single();
-            
-          if (profile?.role === 'admin') {
-            navigate("/admin");
-          } else {
-            navigate("/dashboard");
-          }
+    // Forzar limpieza total de la sesión al entrar a la página de login
+    // para evitar cualquier estado corrupto y recargar la página una vez
+    // para restaurar el cliente de Supabase.
+    const forceCleanup = async () => {
+      const hasCleanedUp = sessionStorage.getItem('auth_cleaned_up');
+      
+      if (!hasCleanedUp) {
+        try {
+          Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('sb-')) {
+              localStorage.removeItem(key);
+            }
+          });
+          // No hacemos un await aquí para que no se congele si la red está fallando
+          supabase.auth.signOut().catch(e => console.error(e));
+        } catch (error) {
+          console.error("Error clearing session:", error);
         }
+        
+        sessionStorage.setItem('auth_cleaned_up', 'true');
+        window.location.reload();
       }
-    );
+    };
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profile?.role === 'admin') {
-          navigate("/admin");
-        } else {
-          navigate("/dashboard");
-        }
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+    forceCleanup();
+  }, []);
 
   const validate = () => {
     const newErrors: { email?: string; password?: string; fullName?: string } = {};
@@ -178,6 +168,29 @@ const Auth = () => {
         errorMessage = t.auth.errors.auth_error_desc;
       } else if (errorMessage.includes("already registered")) {
         errorMessage = t.auth.errors.existing_user_desc;
+      } else if (errorMessage.includes("Timeout")) {
+        // Known issue: Local storage lock corrupted
+        errorMessage = "Error de conexión o caché corrupta. Limpiando sesión y reiniciando...";
+        try {
+          Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('sb-')) {
+              localStorage.removeItem(key);
+            }
+          });
+        } catch(e) {}
+        
+        toast({
+          title: "Recuperando sesión",
+          description: errorMessage,
+        });
+        
+        setTimeout(() => {
+          sessionStorage.removeItem('auth_cleaned_up');
+          window.location.reload();
+        }, 1500);
+        
+        setLoading(false);
+        return;
       }
 
       toast({
@@ -186,7 +199,9 @@ const Auth = () => {
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      if (!isResetMode) {
+         setLoading(false);
+      }
     }
   };
 
