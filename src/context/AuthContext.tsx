@@ -145,6 +145,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Inactivity Timeout (30 minutes)
+  useEffect(() => {
+    if (!user) return; // Only track inactivity when logged in
+
+    let timeoutId: NodeJS.Timeout;
+    const TIME_LIMIT = 30 * 60 * 1000; // 30 minutes in milliseconds
+
+    const handleInactivity = async () => {
+      console.log("Session expired due to inactivity.");
+      toast.info("Sesión cerrada por inactividad de 30 minutos.", {
+         duration: 5000,
+      });
+      await signOut();
+    };
+
+    const resetTimer = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(handleInactivity, TIME_LIMIT);
+    };
+
+    // Events that reset the timer
+    const events = ['mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
+    
+    // Initial timer setup
+    resetTimer();
+
+    // Attach listeners
+    events.forEach(event => window.addEventListener(event, resetTimer));
+
+    // Cleanup
+    return () => {
+      clearTimeout(timeoutId);
+      events.forEach(event => window.removeEventListener(event, resetTimer));
+    };
+  }, [user]);
+
   // Keep a ref to the profile to access it inside the subscription callback without re-subscribing
   const profileRef = useRef(profile);
   
