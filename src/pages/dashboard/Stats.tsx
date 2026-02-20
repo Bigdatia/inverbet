@@ -8,6 +8,14 @@ import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
+const formatCurrency = (val: number) => {
+  return new Intl.NumberFormat('en-US', { 
+    style: 'decimal', 
+    minimumFractionDigits: 0, 
+    maximumFractionDigits: 2 
+  }).format(val);
+};
+
 const Stats = () => {
   const [loading, setLoading] = useState(true);
   const [signals, setSignals] = useState<any[]>([]);
@@ -69,7 +77,8 @@ const Stats = () => {
 
         const totalResolved = won + lost; // exclude voided from win rate math usually, or include them as just 0. Here we exclude voided from win rate.
         const winRate = totalResolved > 0 ? (won / totalResolved) * 100 : 0;
-        const roi = totalStakedUnits > 0 ? (profitUnits / totalStakedUnits) * 100 : 0;
+        // Since 1 Unit = 10% of Bankroll, 1 Profit Unit = 10% ROI
+        const roi = profitUnits * 10;
 
         setMetrics({
           totalResolved: totalResolved + voided, // true total
@@ -93,7 +102,7 @@ const Stats = () => {
   }, []);
 
   const numBankroll = parseFloat(bankroll) || 0;
-  const unitValue = numBankroll / 100;
+  const unitValue = numBankroll / 10;
   const simulatedProfit = metrics.profitUnits * unitValue;
 
   const chartData = useMemo(() => {
@@ -114,7 +123,7 @@ const Stats = () => {
       dailyData[dateStr] += (s.realProfit || 0);
     });
 
-    let currentProfit = 100; // Starting baseline
+    let currentProfit = 10; // Starting baseline
     
     const chart = Object.entries(dailyData).map(([date, dayProfit], index) => {
       currentProfit += dayProfit;
@@ -128,7 +137,7 @@ const Stats = () => {
 
     // Insert day 0 to show the starting point
     return [
-      { name: 'Inicio', date: 'Día 0', profit: 100, dayProfit: 0 },
+      { name: 'Inicio', date: '10 feb', profit: 10, dayProfit: 0 },
       ...chart
     ];
   }, [signals]);
@@ -286,11 +295,12 @@ const Stats = () => {
                   minTickGap={30}
                 />
                 <YAxis 
-                  domain={['dataMin - 5', 'dataMax + 5']}
+                  domain={[0, 20]}
                   axisLine={false} 
                   tickLine={false} 
                   tick={{ fontSize: 12, fill: '#ffffff' }} 
                   tickFormatter={(val) => `${val}U`}
+                  width={55}
                 />
                 <Tooltip 
                   contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)', borderRadius: '8px' }}
@@ -301,10 +311,10 @@ const Stats = () => {
                 <Area 
                   type="linear" 
                   dataKey="profit" 
-                  stroke={chartData[chartData.length - 1]?.profit >= 100 ? "#10b981" : "#ef4444"} 
+                  stroke={chartData[chartData.length - 1]?.profit >= 10 ? "#10b981" : "#ef4444"} 
                   strokeWidth={3}
                   fillOpacity={1} 
-                  fill={chartData[chartData.length - 1]?.profit >= 100 ? "url(#colorProfit)" : "url(#colorLoss)"} 
+                  fill={chartData[chartData.length - 1]?.profit >= 10 ? "url(#colorProfit)" : "url(#colorLoss)"} 
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -342,8 +352,8 @@ const Stats = () => {
              </div>
              
              <div className="bg-background/50 rounded-lg p-3 border border-border flex justify-between items-center outline outline-1 outline-transparent hover:outline-primary/20 transition-all">
-                <span className="text-sm text-muted-foreground">Valor de 1 Unidad (1%)</span>
-                <span className="font-mono text-sm font-bold text-foreground/90">${(numBankroll / 100).toFixed(2)}</span>
+                <span className="text-sm text-muted-foreground">Valor de 1 Unidad (10%)</span>
+                <span className="font-mono text-sm font-bold text-foreground/90">${formatCurrency(numBankroll / 10)}</span>
              </div>
           </div>
         </div>
@@ -351,10 +361,10 @@ const Stats = () => {
         <div className="mt-8 pt-6 border-t border-primary/10">
           <div className="text-sm text-muted-foreground mb-2 font-medium">Ganancia Proyectada Histórica</div>
           <div className={cn(
-            "font-mono text-4xl font-black drop-shadow-sm",
+            "font-mono text-4xl w-full text-center overflow-x-auto custom-scrollbar font-black drop-shadow-sm pb-2",
             simulatedProfit > 0 ? "text-green-500" : simulatedProfit < 0 ? "text-red-500" : ""
           )}>
-            {simulatedProfit > 0 ? "+" : ""}${simulatedProfit.toFixed(2)}
+            {simulatedProfit > 0 ? "+" : ""}${formatCurrency(simulatedProfit)}
           </div>
         </div>
       </motion.div>

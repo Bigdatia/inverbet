@@ -352,23 +352,7 @@ const ScannerManagement = () => {
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4 mt-4">
               
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Deporte</Label>
-                  <Select 
-                    value={formData.sport} 
-                    onValueChange={(val) => setFormData({...formData, sport: val})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="futbol">Fútbol</SelectItem>
-                      <SelectItem value="tenis">Tenis</SelectItem>
-                      <SelectItem value="basket">Baloncesto</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-4">
                 <div className="space-y-2">
                   <Label>Liga / Torneo</Label>
                   <Input 
