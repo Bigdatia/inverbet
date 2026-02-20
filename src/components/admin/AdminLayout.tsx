@@ -42,6 +42,7 @@ const AdminLayout = () => {
 
   const handleLogout = async () => {
     await signOut();
+    navigate("/");
   };
 
   const NavItem = ({ item, isMobile = false }: { item: any, isMobile?: boolean }) => {
@@ -170,7 +171,7 @@ const AdminLayout = () => {
         </nav>
 
         <button
-          onClick={() => signOut()}
+          onClick={handleLogout}
           className="mt-8 flex items-center gap-3 px-3 py-3 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
         >
           <LogOut className="h-5 w-5" />
