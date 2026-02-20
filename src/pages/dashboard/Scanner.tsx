@@ -47,6 +47,15 @@ const Scanner = () => {
   });
 
   const filteredSignals = signals.filter((signal) => {
+    // Hide signals that are already resolved ('won', 'lost', 'void') AND are not from today.
+    // This ensures only 'pending' signals or today's resolved signals show up in the live scanner.
+    const isResolved = signal.status === 'won' || signal.status === 'lost' || signal.status === 'void';
+    const isToday = new Date(signal.created_at).toDateString() === new Date().toDateString();
+    
+    if (isResolved && !isToday) {
+       return false;
+    }
+
     if (activeFilter === "all") return true;
     if (activeFilter === "high") return signal.confidence === "high";
     if (activeFilter === "football") return signal.sport === "futbol";
@@ -79,17 +88,17 @@ const Scanner = () => {
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center gap-4 p-4 bg-secondary/30 border border-border rounded-xl"
+        className="flex items-center gap-4 p-4 bg-secondary/30 border border-border rounded-xl flex-wrap"
       >
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Señales activas:</span>
-          <span className="font-mono text-lg font-bold text-primary">{signals.length}</span>
+          <span className="text-sm text-muted-foreground">Señales activas/hoy:</span>
+          <span className="font-mono text-lg font-bold text-primary">{filteredSignals.length}</span>
         </div>
-        <div className="h-4 w-px bg-border" />
+        <div className="hidden sm:block h-4 w-px bg-border" />
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Alta confianza:</span>
           <span className="font-mono text-lg font-bold text-primary">
-            {signals.filter((s) => s.confidence === "high").length}
+            {filteredSignals.filter((s) => s.confidence === "high").length}
           </span>
         </div>
         <div className="h-4 w-px bg-border hidden sm:block" />
