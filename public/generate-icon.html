@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Generador Icono PWA</title>
+</head>
+<body style="background: #1a1a1a; color: white; font-family: sans-serif; text-align: center; padding: 50px;">
+    <h2>Generador de Icono con Fondo Oscuro para iOS</h2>
+    <p>Haz clic en el botón para descargar tu <code>apple-touch-icon.png</code></p>
+    
+    <canvas id="canvas" style="display: none;"></canvas>
+    
+    <!-- Muestra como se verá -->
+    <div style="margin: 20px auto; width: 192px; height: 192px; border-radius: 20%; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <img id="preview" style="width: 100%; height: 100%; object-fit: cover;" />
+    </div>
+
+    <button id="downloadBtn" style="padding: 10px 20px; font-size: 16px; background: #D5FC6B; color: black; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
+        Descargar Icono
+    </button>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const preview = document.getElementById('preview');
+        const img = new Image();
+        
+        // Cargar el logo original
+        img.src = '/logo.png';
+        
+        img.onload = () => {
+            // iOS icons suelen ser cuadradas, ej. 512x512
+            const size = Math.max(img.width, img.height, 512);
+            canvas.width = size;
+            canvas.height = size;
+            
+            // 1. Dibujar el fondo oscuro
+            ctx.fillStyle = '#090A0B'; // El color dark de tu app
+            ctx.fillRect(0, 0, size, size);
+            
+            // 2. Dibujar el logo centrado respetando proporción
+            const imgRatio = img.width / img.height;
+            let drawWidth = size * 0.8; // 80% del tamaño para margen
+            let drawHeight = size * 0.8;
+            
+            if (imgRatio > 1) {
+                drawHeight = drawWidth / imgRatio;
+            } else {
+                drawWidth = drawHeight * imgRatio;
+            }
+            
+            const x = (size - drawWidth) / 2;
+            const y = (size - drawHeight) / 2;
+            
+            ctx.drawImage(img, x, y, drawWidth, drawHeight);
+            
+            // Mostrar en el preview
+            preview.src = canvas.toDataURL('image/png');
+        };
+
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = 'apple-touch-icon.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+    </script>
+</body>
+</html>
