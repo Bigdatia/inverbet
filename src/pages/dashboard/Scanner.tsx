@@ -1,6 +1,6 @@
 import { useState, useEffect, Fragment } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { format, isToday, isTomorrow, parseISO } from "date-fns";
+import { format, isToday, isTomorrow, parseISO, startOfDay, isBefore } from "date-fns";
 import { es } from "date-fns/locale";
 import { motion } from "framer-motion";
 import SignalCard from "@/components/dashboard/SignalCard";
@@ -13,9 +13,7 @@ import { Lock } from "lucide-react";
 
 const filters = [
   { id: "all", label: "Todos" },
-  { id: "football", label: "Fútbol" },
-  { id: "tennis", label: "Tenis" },
-  { id: "basketball", label: "Baloncesto" },
+  { id: "today", label: "Hoy" },
   { id: "high", label: "Alta Probabilidad" },
 ];
 
@@ -49,25 +47,26 @@ const Scanner = () => {
   });
 
   const filteredSignals = signals.filter((signal) => {
-    // Hide signals that are already resolved ('won', 'lost', 'void') AND are not from today.
-    // This ensures only 'pending' signals or today's resolved signals show up in the live scanner.
     const isResolved = signal.status === 'won' || signal.status === 'lost' || signal.status === 'void';
-    const isToday = new Date(signal.created_at).toDateString() === new Date().toDateString();
+    const signalDate = new Date(signal.created_at);
+    const isTodaySignal = isToday(signalDate);
+    const isPast = isBefore(signalDate, startOfDay(new Date()));
     
-    if (isResolved && !isToday) {
+    // Always hide signals that are already resolved ('won', 'lost', 'void') AND are not from today
+    if (isResolved && !isTodaySignal) {
        return false;
     }
 
-    if (activeFilter === "all") return true;
-    if (activeFilter === "high") return signal.confidence === "high";
-    
-    // Normalize string to ignore case and accents
-    const normalizedSport = signal.sport?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") || "";
-    
-    if (activeFilter === "football") return normalizedSport.includes("futbol");
-    if (activeFilter === "tennis") return normalizedSport.includes("tenis");
-    if (activeFilter === "basketball") return normalizedSport.includes("basket");
-    return true;
+    if (activeFilter === "today") {
+      return isTodaySignal;
+    }
+
+    if (activeFilter === "high") {
+      return signal.confidence === "high";
+    }
+
+    // Default "all" behavior (also fallback): return matches from today onwards
+    return !isPast;
   })?.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
   // Group signals by Date string (e.g., "2024-10-25")
