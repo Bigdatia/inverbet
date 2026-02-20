@@ -41,9 +41,13 @@ const DashboardLayout = () => {
   // Effect for redirect
   // useEffect(() => { if (!loading && !user) navigate("/auth"); }, [loading, user, navigate]);
   // But we can't use hooks inside if(loading). Redo structure.
-
   const fullName = profile?.full_name || user?.user_metadata?.full_name;
   const userName = fullName ? fullName.split(" ")[0] : (user?.email?.split("@")[0] || "Usuario");
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   return (
     <div className="h-screen bg-black flex overflow-hidden">
@@ -84,7 +88,7 @@ const DashboardLayout = () => {
 
         {/* Logout */}
         <button
-          onClick={() => signOut()}
+          onClick={handleLogout}
           className="flex items-center gap-3 px-3 py-3 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-200 mt-auto"
         >
           <LogOut className="h-5 w-5" />
@@ -147,7 +151,7 @@ const DashboardLayout = () => {
         </nav>
 
         <button
-          onClick={() => signOut()}
+          onClick={handleLogout}
           className="mt-auto flex items-center gap-3 px-3 py-3 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
         >
           <LogOut className="h-5 w-5" />
