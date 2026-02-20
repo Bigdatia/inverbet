@@ -40,20 +40,31 @@ const Stats = () => {
         let won = 0, lost = 0, voided = 0, profitUnits = 0;
         let totalStakedUnits = 0;
 
+        const chronologicalSignals = [...(signalsData || [])].reverse();
+
         // Calculate based on flat 1 Unit staked per bet
-        signalsData?.forEach((s) => {
+        const enrichedSignals = chronologicalSignals.map((s) => {
+          let realProfit = 0;
+          let stakeUsed = 1;
           totalStakedUnits += 1;
           
           if (s.status === "won") {
             won++;
-            profitUnits += (s.odds - 1);
+            realProfit = (s.odds - 1);
+            profitUnits += realProfit;
           } else if (s.status === "lost") {
             lost++;
-            profitUnits -= 1;
+            realProfit = -1;
+            profitUnits += realProfit;
           } else if (s.status === "void") {
             voided++;
-            // Profit delta is 0 for void
           }
+          
+          return {
+            ...s,
+            realProfit,
+            stakeUsed
+          };
         });
 
         const totalResolved = won + lost; // exclude voided from win rate math usually, or include them as just 0. Here we exclude voided from win rate.
@@ -70,7 +81,7 @@ const Stats = () => {
           roi,
         });
         
-        setSignals(signalsData || []);
+        setSignals(enrichedSignals.reverse());
       } catch (err) {
         console.error("Error fetching signal stats:", err);
       } finally {
@@ -91,18 +102,35 @@ const Stats = () => {
     // Reverse signals to display them chronologically
     const sorted = [...signals].reverse();
     
-    let currentProfit = 0;
-    return sorted.map((s, index) => {
-      if (s.status === 'won') currentProfit += (s.odds - 1);
-      else if (s.status === 'lost') currentProfit -= 1;
-      // void does nothing
+    // Group profit/loss by date
+    const dailyData: Record<string, number> = {};
+    
+    sorted.forEach((s) => {
+      const dateStr = new Date(s.created_at).toLocaleDateString("es-ES", { month: "short", day: "numeric" });
+      if (!dailyData[dateStr]) {
+        dailyData[dateStr] = 0;
+      }
+      
+      dailyData[dateStr] += (s.realProfit || 0);
+    });
 
+    let currentProfit = 100; // Starting baseline
+    
+    const chart = Object.entries(dailyData).map(([date, dayProfit], index) => {
+      currentProfit += dayProfit;
       return {
-        name: `Pick ${index + 1}`,
-        date: new Date(s.created_at).toLocaleDateString("es-ES", { month: "short", day: "numeric" }),
-        profit: parseFloat(currentProfit.toFixed(2))
+        name: `Día ${index + 1}`,
+        date,
+        profit: parseFloat(currentProfit.toFixed(2)),
+        dayProfit: parseFloat(dayProfit.toFixed(2))
       };
     });
+
+    // Insert day 0 to show the starting point
+    return [
+      { name: 'Inicio', date: 'Día 0', profit: 100, dayProfit: 0 },
+      ...chart
+    ];
   }, [signals]);
 
   return (
@@ -124,7 +152,7 @@ const Stats = () => {
       </motion.div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {/* Unidades Ganadas */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -211,53 +239,16 @@ const Stats = () => {
           <div className="text-sm text-muted-foreground">Retorno de Inversión</div>
         </motion.div>
 
-        {/* Earnings Simulator - Compact Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="bg-primary/5 border border-primary/20 rounded-xl p-5 flex flex-col justify-between"
-        >
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-bold text-primary">Simular Capital</span>
-              <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                <Calculator className="h-4 w-4 text-primary" />
-              </div>
-            </div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-muted-foreground">$</span>
-              <Input 
-                type="number" 
-                value={bankroll} 
-                onChange={(e) => setBankroll(e.target.value)}
-                className="h-8 text-sm font-mono font-bold bg-background"
-              />
-            </div>
-            <div className="text-xs text-muted-foreground mb-4">
-              Valor Unidad: ${(numBankroll / 100).toFixed(2)}
-            </div>
-          </div>
-          
-          <div className="pt-3 border-t border-primary/10">
-            <div className="text-xs text-muted-foreground mb-1">Ganancia Proyectada</div>
-            <div className={cn(
-              "font-mono text-xl font-black",
-              simulatedProfit > 0 ? "text-green-500" : simulatedProfit < 0 ? "text-red-500" : ""
-            )}>
-              {simulatedProfit > 0 ? "+" : ""}${simulatedProfit.toFixed(2)}
-            </div>
-          </div>
-        </motion.div>
       </div>
 
-      {/* Evolution Chart */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.45 }}
-        className="bg-card border border-border rounded-xl p-6"
-      >
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Evolution Chart */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.45 }}
+          className="bg-card border border-border rounded-xl p-6 lg:col-span-2"
+        >
         <div className="flex items-center justify-between mb-6">
           <h2 className="font-display text-lg font-bold">Evolución de Unidades (Growth)</h2>
           <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-md">Profit Acumulado</span>
@@ -290,35 +281,84 @@ const Stats = () => {
                   dataKey="date" 
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }} 
+                  tick={{ fontSize: 12, fill: '#ffffff' }} 
                   dy={10} 
                   minTickGap={30}
                 />
                 <YAxis 
+                  domain={['dataMin - 5', 'dataMax + 5']}
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }} 
-                  tickFormatter={(val) => `${val > 0 ? '+' : ''}${val}U`}
+                  tick={{ fontSize: 12, fill: '#ffffff' }} 
+                  tickFormatter={(val) => `${val}U`}
                 />
                 <Tooltip 
                   contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)', borderRadius: '8px' }}
                   itemStyle={{ color: 'var(--foreground)', fontWeight: 'bold' }}
                   labelStyle={{ color: 'var(--muted-foreground)' }}
-                  formatter={(value: number) => [`${value > 0 ? '+' : ''}${value} U`, 'Profit Acumulado']}
+                  formatter={(value: number) => [`${value} U`, 'Unidades Acumuladas']}
                 />
                 <Area 
-                  type="monotone" 
+                  type="linear" 
                   dataKey="profit" 
-                  stroke={chartData[chartData.length - 1]?.profit >= 0 ? "#10b981" : "#ef4444"} 
+                  stroke={chartData[chartData.length - 1]?.profit >= 100 ? "#10b981" : "#ef4444"} 
                   strokeWidth={3}
                   fillOpacity={1} 
-                  fill={chartData[chartData.length - 1]?.profit >= 0 ? "url(#colorProfit)" : "url(#colorLoss)"} 
+                  fill={chartData[chartData.length - 1]?.profit >= 100 ? "url(#colorProfit)" : "url(#colorLoss)"} 
                 />
               </AreaChart>
             </ResponsiveContainer>
           )}
         </div>
       </motion.div>
+
+      {/* Earnings Simulator - Compact Card Moved Next to Chart */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.45 }}
+        className="bg-primary/5 border border-primary/20 rounded-xl p-6 flex flex-col justify-center lg:col-span-1"
+      >
+        <div>
+          <div className="flex items-center justify-between mb-6">
+            <span className="text-lg font-bold text-primary font-display">Simular Capital</span>
+            <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center border border-primary/20">
+              <Calculator className="h-5 w-5 text-primary" />
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+             <div className="space-y-2">
+                <label className="text-sm text-foreground/80 font-medium ml-1">Tu Bankroll Total</label>
+                <div className="flex items-center gap-2 relative">
+                  <span className="absolute left-3 text-muted-foreground font-medium">$</span>
+                  <Input 
+                    type="number" 
+                    value={bankroll} 
+                    onChange={(e) => setBankroll(e.target.value)}
+                    className="h-12 text-lg font-mono font-bold bg-background/50 pl-8"
+                  />
+                </div>
+             </div>
+             
+             <div className="bg-background/50 rounded-lg p-3 border border-border flex justify-between items-center outline outline-1 outline-transparent hover:outline-primary/20 transition-all">
+                <span className="text-sm text-muted-foreground">Valor de 1 Unidad (1%)</span>
+                <span className="font-mono text-sm font-bold text-foreground/90">${(numBankroll / 100).toFixed(2)}</span>
+             </div>
+          </div>
+        </div>
+        
+        <div className="mt-8 pt-6 border-t border-primary/10">
+          <div className="text-sm text-muted-foreground mb-2 font-medium">Ganancia Proyectada Histórica</div>
+          <div className={cn(
+            "font-mono text-4xl font-black drop-shadow-sm",
+            simulatedProfit > 0 ? "text-green-500" : simulatedProfit < 0 ? "text-red-500" : ""
+          )}>
+            {simulatedProfit > 0 ? "+" : ""}${simulatedProfit.toFixed(2)}
+          </div>
+        </div>
+      </motion.div>
+    </div>
 
       {/* Recent Bets */}
       <motion.div
@@ -348,10 +388,9 @@ const Stats = () => {
                const isLost = signal.status === "lost";
                const isVoid = signal.status === "void";
                
-               let profitStr = "";
-               if (isWon) profitStr = `+${(signal.odds - 1).toFixed(2)} U`;
-               if (isLost) profitStr = `-1.00 U`;
-               if (isVoid) profitStr = `0.00 U`;
+                let profitStr = "";
+                if (isWon || isLost) profitStr = `${signal.realProfit > 0 ? "+" : ""}${signal.realProfit?.toFixed(2)} U`;
+                if (isVoid) profitStr = `0.00 U`;
 
                return (
                 <div

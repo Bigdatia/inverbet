@@ -30,6 +30,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const profileRef = useRef(profile);
+  const userRef = useRef(user);
+  
+  useEffect(() => {
+    profileRef.current = profile;
+  }, [profile]);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+
   const fetchProfile = async (userId: string) => {
     try {
       const { data, error } = await supabase
@@ -123,15 +134,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (session?.user) {
          // Fetch profile if we don't have it or if the user changed
-         if (!profile || session.user.id !== user?.id) {
+         if (!profileRef.current || session.user.id !== userRef.current?.id) {
+            console.log("Auth: Fetching profile due to missing reference or user change in onAuthStateChange");
             const userProfile = await fetchProfile(session.user.id);
             
             if (!userProfile) {
-                console.error("User authenticated but profile not found. Signing out.");
-                await supabase.auth.signOut();
-                setSession(null);
-                setUser(null);
-                setProfile(null);
+                console.error("User authenticated but fetching profile failed in background. Keeping existing state if any.");
+                // IF it failed due to network, do not violently sign them out here.
+                // Just fallback to current or null.
+                if (!profileRef.current) {
+                  setProfile(null);
+                }
             } else {
                 setProfile(userProfile);
             }
@@ -180,13 +193,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       events.forEach(event => window.removeEventListener(event, resetTimer));
     };
   }, [user]);
-
-  // Keep a ref to the profile to access it inside the subscription callback without re-subscribing
-  const profileRef = useRef(profile);
-  
-  useEffect(() => {
-    profileRef.current = profile;
-  }, [profile]);
 
   // Realtime subscription for profile changes
   useEffect(() => {
@@ -240,7 +246,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               if (currentProfile && freshProfile.subscription_tier !== currentProfile.subscription_tier) {
                  toast.info("Tu plan ha sido actualizado. Por favor inicia sesión nuevamente.");
                  setTimeout(() => signOut(), 2000);
-              } else {
+              } else if (JSON.stringify(currentProfile) !== JSON.stringify(freshProfile)) {
+                 // Only update state if the profile data actually changed to prevent infinite re-renders on every window focus
                  setProfile(freshProfile);
               }
           }

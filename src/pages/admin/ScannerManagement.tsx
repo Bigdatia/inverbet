@@ -30,11 +30,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Search, Trash2, Edit2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { format, startOfDay, isBefore } from "date-fns";
 import { es } from "date-fns/locale";
 
 const ScannerManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [showOnlyUpcoming, setShowOnlyUpcoming] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
@@ -216,10 +217,16 @@ const ScannerManagement = () => {
     }
   };
 
-  const filteredSignals = signals?.filter(signal => 
-    signal.match.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    signal.league.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredSignals = signals?.filter(signal => {
+    const matchesSearch = signal.match.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          signal.league.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    if (!showOnlyUpcoming) return matchesSearch;
+    
+    // Check if the signal is from today or future
+    const isPast = isBefore(new Date(signal.created_at), startOfDay(new Date()));
+    return matchesSearch && !isPast;
+  });
 
   return (
     <div className="space-y-6">
@@ -409,7 +416,26 @@ const ScannerManagement = () => {
                     step="0.01"
                     placeholder="1.85"
                     value={formData.odds}
-                    onChange={(e) => setFormData({...formData, odds: e.target.value})}
+                    onChange={(e) => {
+                      const newOddsStr = e.target.value;
+                      const newOdds = parseFloat(newOddsStr);
+                      let newProbStr = formData.stake;
+                      let newConfidence = formData.confidence;
+
+                      // Calculate implied probability: (100 / odds)
+                      if (!isNaN(newOdds) && newOdds > 1) {
+                        const calculatedProb = Math.round(100 / newOdds);
+                        newProbStr = calculatedProb.toString();
+                        newConfidence = calculatedProb >= 80 ? "high" : "medium";
+                      }
+
+                      setFormData({
+                        ...formData, 
+                        odds: newOddsStr,
+                        stake: newProbStr,
+                        confidence: newConfidence
+                      });
+                    }}
                   />
                 </div>
               </div>
@@ -438,12 +464,8 @@ const ScannerManagement = () => {
                     max="100"
                     placeholder="85"
                     value={formData.stake}
-                    onChange={(e) => {
-                      const prob = parseInt(e.target.value) || 0;
-                      // Auto-calculate confidence based on probability
-                      const newConfidence = prob >= 85 ? "high" : "medium";
-                      setFormData({...formData, stake: e.target.value, confidence: newConfidence});
-                    }}
+                    disabled
+                    className="bg-muted"
                   />
                 </div>
                  <div className="space-y-2">
@@ -507,14 +529,27 @@ const ScannerManagement = () => {
         </Dialog>
       </div>
 
-      <div className="flex items-center gap-2 bg-secondary/20 p-2 rounded-lg border border-border/50 max-w-md">
-        <Search className="h-4 w-4 text-muted-foreground" />
-        <Input 
-          placeholder="Buscar por partido o liga..." 
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="border-none bg-transparent focus-visible:ring-0 h-auto p-0"
-        />
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-2 bg-secondary/20 p-2 rounded-lg border border-border/50 w-full sm:max-w-md">
+          <Search className="h-4 w-4 text-muted-foreground" />
+          <Input 
+            placeholder="Buscar por partido o liga..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="border-none bg-transparent focus-visible:ring-0 h-auto p-0"
+          />
+        </div>
+        
+        <div className="flex items-center gap-3 bg-secondary/20 p-2 rounded-lg border border-border/50">
+          <Switch 
+            checked={showOnlyUpcoming} 
+            onCheckedChange={setShowOnlyUpcoming} 
+            id="filter-past"
+          />
+          <Label htmlFor="filter-past" className="text-sm cursor-pointer mb-0">
+            Ocultar Anteriores a Hoy
+          </Label>
+        </div>
       </div>
 
       <div className="rounded-xl border border-border bg-card overflow-hidden">
