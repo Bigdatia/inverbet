@@ -11,11 +11,14 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { Search, AlertCircle, MessageCircle } from "lucide-react";
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
 
   const fetchUsers = async () => {
@@ -110,7 +113,18 @@ const UserManagement = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-display font-bold">Gestión de Usuarios</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <h1 className="text-3xl font-display font-bold">Gestión de Usuarios</h1>
+        <div className="relative w-full sm:w-72">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input 
+            placeholder="Buscar por nombre o email..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+      </div>
 
       <div className="rounded-md border">
         <Table>
@@ -126,7 +140,15 @@ const UserManagement = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((user: any) => {
+            {users
+              .filter((user: any) => {
+                if (!searchTerm) return true;
+                const searchLower = searchTerm.toLowerCase();
+                const nameMatch = user.full_name?.toLowerCase().includes(searchLower);
+                const emailMatch = user.email?.toLowerCase().includes(searchLower);
+                return nameMatch || emailMatch;
+              })
+              .map((user: any) => {
               const isPro = user.subscription_tier === 'premium' || user.subscription_tier === 'pro';
               
               const lastPaymentDate = user.subscription_start_date 
@@ -136,9 +158,27 @@ const UserManagement = () => {
                     day: 'numeric'
                   })
                 : 'N/A';
+                
+              // Expiration logic
+              let isExpiringSoon = false;
+              let daysRemaining = null;
+              
+              if (isPro && user.subscription_end_date) {
+                const endDate = new Date(user.subscription_end_date);
+                const today = new Date();
+                const diffTime = endDate.getTime() - today.getTime();
+                daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                if (daysRemaining <= 3 && daysRemaining >= 0) {
+                  isExpiringSoon = true;
+                }
+              }
 
               return (
-                <TableRow key={user.id}>
+                <TableRow 
+                  key={user.id}
+                  className={isExpiringSoon ? "bg-red-500/10 hover:bg-red-500/20" : ""}
+                >
                   <TableCell className="font-medium">{user.full_name || 'N/A'}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell className="capitalize">
@@ -171,7 +211,15 @@ const UserManagement = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    {lastPaymentDate}
+                    <div className="flex flex-col gap-1">
+                      <span>{lastPaymentDate}</span>
+                      {isExpiringSoon && (
+                        <div className="flex items-center gap-1 text-xs text-red-500 font-semibold">
+                          <AlertCircle className="w-3 h-3" />
+                          <span>Vence en {daysRemaining} días</span>
+                        </div>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
