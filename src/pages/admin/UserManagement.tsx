@@ -44,16 +44,28 @@ const UserManagement = () => {
 
   const toggleSubscriptionTier = async (userId: string, isPro: boolean) => {
     const newTier = isPro ? 'free' : 'premium'; // Toggle
+    const updateData: any = { 
+      subscription_tier: newTier 
+    };
+    
+    // Si lo estamos pasando a PRO, lo marcamos activo y le ponemos fecha de inicio hoy
+    if (newTier === 'premium') {
+       updateData.subscription_status = 'active';
+       updateData.subscription_start_date = new Date().toISOString();
+    } else {
+       updateData.subscription_status = 'inactive';
+    }
+
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({ subscription_tier: newTier })
+        .update(updateData)
         .eq('id', userId);
 
       if (error) throw error;
 
       setUsers(users.map((user: any) => 
-        user.id === userId ? { ...user, subscription_tier: newTier } : user
+        user.id === userId ? { ...user, ...updateData } : user
       ));
 
       toast({
