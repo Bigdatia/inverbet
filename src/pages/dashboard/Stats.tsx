@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { TrendingUp, TrendingDown, Target, Wallet, DollarSign, Calendar, Calculator, Loader2 } from "lucide-react";
@@ -83,6 +84,27 @@ const Stats = () => {
   const numBankroll = parseFloat(bankroll) || 0;
   const unitValue = numBankroll / 100;
   const simulatedProfit = metrics.profitUnits * unitValue;
+
+  const chartData = useMemo(() => {
+    if (!signals.length) return [];
+    
+    // Reverse signals to display them chronologically
+    const sorted = [...signals].reverse();
+    
+    let currentProfit = 0;
+    return sorted.map((s, index) => {
+      if (s.status === 'won') currentProfit += (s.odds - 1);
+      else if (s.status === 'lost') currentProfit -= 1;
+      // void does nothing
+
+      return {
+        name: `Pick ${index + 1}`,
+        date: new Date(s.created_at).toLocaleDateString("es-ES", { month: "short", day: "numeric" }),
+        profit: parseFloat(currentProfit.toFixed(2))
+      };
+    });
+  }, [signals]);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -102,7 +124,7 @@ const Stats = () => {
       </motion.div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Unidades Ganadas */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -188,55 +210,113 @@ const Stats = () => {
           </div>
           <div className="text-sm text-muted-foreground">Retorno de Inversión</div>
         </motion.div>
+
+        {/* Earnings Simulator - Compact Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="bg-primary/5 border border-primary/20 rounded-xl p-5 flex flex-col justify-between"
+        >
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-bold text-primary">Simular Capital</span>
+              <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                <Calculator className="h-4 w-4 text-primary" />
+              </div>
+            </div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-muted-foreground">$</span>
+              <Input 
+                type="number" 
+                value={bankroll} 
+                onChange={(e) => setBankroll(e.target.value)}
+                className="h-8 text-sm font-mono font-bold bg-background"
+              />
+            </div>
+            <div className="text-xs text-muted-foreground mb-4">
+              Valor Unidad: ${(numBankroll / 100).toFixed(2)}
+            </div>
+          </div>
+          
+          <div className="pt-3 border-t border-primary/10">
+            <div className="text-xs text-muted-foreground mb-1">Ganancia Proyectada</div>
+            <div className={cn(
+              "font-mono text-xl font-black",
+              simulatedProfit > 0 ? "text-green-500" : simulatedProfit < 0 ? "text-red-500" : ""
+            )}>
+              {simulatedProfit > 0 ? "+" : ""}${simulatedProfit.toFixed(2)}
+            </div>
+          </div>
+        </motion.div>
       </div>
 
-      {/* Earnings Simulator */}
+      {/* Evolution Chart */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.4 }}
-        className="bg-card border border-border rounded-xl p-6 relative overflow-hidden"
+        transition={{ delay: 0.45 }}
+        className="bg-card border border-border rounded-xl p-6"
       >
-        <div className="absolute top-0 right-0 p-32 bg-primary/5 blur-[100px] rounded-full pointer-events-none" />
-        <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-4">
-             <Calculator className="h-6 w-6 text-primary" />
-             <h2 className="font-display text-xl font-bold">Simulador de Ganancias</h2>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8 items-center">
-             <div className="space-y-3">
-               <label className="text-sm font-medium text-muted-foreground block">Tu Capital Total (Bankroll)</label>
-               <div className="relative">
-                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                 <Input 
-                   type="number" 
-                   value={bankroll} 
-                   onChange={(e) => setBankroll(e.target.value)}
-                   className="pl-8 font-mono text-lg font-bold"
-                 />
-               </div>
-               <p className="text-xs text-muted-foreground">Tu capital se divide siempre en 100 unidades (% stake plano).</p>
-             </div>
-             
-             <div className="bg-secondary/30 p-4 rounded-xl text-center space-y-1">
-                <div className="text-sm text-muted-foreground">Valor por Unidad (1%)</div>
-                <div className="text-2xl font-mono font-bold">${unitValue.toFixed(2)}</div>
-             </div>
-             
-             <div className="bg-primary/10 border border-primary/20 p-4 rounded-xl text-center space-y-1">
-                <div className="text-sm font-bold text-primary">Ganancia Estimada Histórica</div>
-                <div className={cn(
-                  "text-3xl font-mono font-black",
-                  simulatedProfit >= 0 ? "text-green-500" : "text-red-500"
-                )}>
-                  {simulatedProfit >= 0 ? "+" : ""}${simulatedProfit.toFixed(2)}
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                   Resultado aplicando {metrics.profitUnits.toFixed(2)} unidades históricas a tu capital.
-                </p>
-             </div>
-          </div>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="font-display text-lg font-bold">Evolución de Unidades (Growth)</h2>
+          <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-md">Profit Acumulado</span>
+        </div>
+        
+        <div className="h-[300px] w-full">
+          {loading ? (
+            <div className="h-full flex items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : signals.length === 0 ? (
+            <div className="h-full flex items-center justify-center text-muted-foreground">
+              Aún no hay señales para graficar.
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="colorLoss" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                <XAxis 
+                  dataKey="date" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }} 
+                  dy={10} 
+                  minTickGap={30}
+                />
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }} 
+                  tickFormatter={(val) => `${val > 0 ? '+' : ''}${val}U`}
+                />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)', borderRadius: '8px' }}
+                  itemStyle={{ color: 'var(--foreground)', fontWeight: 'bold' }}
+                  labelStyle={{ color: 'var(--muted-foreground)' }}
+                  formatter={(value: number) => [`${value > 0 ? '+' : ''}${value} U`, 'Profit Acumulado']}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="profit" 
+                  stroke={chartData[chartData.length - 1]?.profit >= 0 ? "#10b981" : "#ef4444"} 
+                  strokeWidth={3}
+                  fillOpacity={1} 
+                  fill={chartData[chartData.length - 1]?.profit >= 0 ? "url(#colorProfit)" : "url(#colorLoss)"} 
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </motion.div>
 

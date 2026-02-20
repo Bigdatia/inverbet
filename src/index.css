@@ -115,6 +115,24 @@
     font-family: "Inter", system-ui, sans-serif;
   }
 
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-background border-l border-border/30;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-primary/30 rounded-full hover:bg-primary/50 transition-colors;
+  }
+
+  ::-webkit-scrollbar-corner {
+    @apply bg-background;
+  }
+
   h1,
   h2,
   h3,
