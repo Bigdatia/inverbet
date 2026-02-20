@@ -119,14 +119,16 @@ const Stats = () => {
   const chartData = useMemo(() => {
     if (!signals.length) return [];
     
-    // Reverse signals to display them chronologically
-    const sorted = [...signals].reverse();
+    // Sort signals chronologically
+    const sortedSignals = [...signals].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
     
-    // Group profit/loss by date
+    // Group signals by day
     const dailyData: Record<string, number> = {};
     
-    sorted.forEach((s) => {
-      const dateStr = new Date(s.created_at).toLocaleDateString("es-ES", { month: "short", day: "numeric" });
+    sortedSignals.forEach(s => {
+      const date = new Date(s.created_at);
+      const dateStr = format(date, "d MMM", { locale: es });
+      
       if (!dailyData[dateStr]) {
         dailyData[dateStr] = 0;
       }
@@ -136,13 +138,14 @@ const Stats = () => {
 
     let currentProfit = 10; // Starting baseline
     
-    const chart = Object.entries(dailyData).map(([date, dayProfit], index) => {
+    const chart = Object.keys(dailyData).map((date, index) => {
+      const dayProfit = dailyData[date];
       currentProfit += dayProfit;
       return {
         name: `Día ${index + 1}`,
         date,
-        profit: parseFloat(currentProfit.toFixed(2)),
-        dayProfit: parseFloat(dayProfit.toFixed(2))
+        profit: Number(currentProfit.toFixed(2)),
+        dayProfit: Number(dayProfit.toFixed(2))
       };
     });
 
@@ -152,6 +155,8 @@ const Stats = () => {
       ...chart
     ];
   }, [signals]);
+
+
 
   return (
     <div className="space-y-6">
@@ -288,12 +293,8 @@ const Stats = () => {
               <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                  </linearGradient>
-                  <linearGradient id="colorLoss" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
@@ -322,10 +323,10 @@ const Stats = () => {
                 <Area 
                   type="linear" 
                   dataKey="profit" 
-                  stroke={chartData[chartData.length - 1]?.profit >= 10 ? "#10b981" : "#ef4444"} 
+                  stroke="#22c55e" 
                   strokeWidth={3}
                   fillOpacity={1} 
-                  fill={chartData[chartData.length - 1]?.profit >= 10 ? "url(#colorProfit)" : "url(#colorLoss)"} 
+                  fill="url(#colorProfit)" 
                 />
               </AreaChart>
             </ResponsiveContainer>
