@@ -19,7 +19,7 @@ const formatCurrency = (val: number) => {
 const Stats = () => {
   const [loading, setLoading] = useState(true);
   const [signals, setSignals] = useState<any[]>([]);
-  const [bankroll, setBankroll] = useState<string>("1000");
+  const [bankroll, setBankroll] = useState<string>("10,000");
 
   const [metrics, setMetrics] = useState({
     totalResolved: 0,
@@ -101,7 +101,18 @@ const Stats = () => {
     fetchSignals();
   }, []);
 
-  const numBankroll = parseFloat(bankroll) || 0;
+  const handleBankrollChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Extraer solo los números
+    const rawValue = e.target.value.replace(/\D/g, '');
+    if (!rawValue) {
+      setBankroll("0");
+      return;
+    }
+    const numValue = parseInt(rawValue, 10);
+    setBankroll(formatCurrency(numValue));
+  };
+
+  const numBankroll = parseFloat(bankroll.replace(/,/g, '')) || 0;
   const unitValue = numBankroll / 10;
   const simulatedProfit = metrics.profitUnits * unitValue;
 
@@ -343,9 +354,9 @@ const Stats = () => {
                 <div className="flex items-center gap-2 relative">
                   <span className="absolute left-3 text-muted-foreground font-medium">$</span>
                   <Input 
-                    type="number" 
+                    type="text" 
                     value={bankroll} 
-                    onChange={(e) => setBankroll(e.target.value)}
+                    onChange={handleBankrollChange}
                     className="h-12 text-lg font-mono font-bold bg-background/50 pl-8"
                   />
                 </div>
