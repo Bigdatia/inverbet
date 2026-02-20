@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { 
@@ -30,7 +30,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Search, Trash2, Edit2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { format, startOfDay, isBefore } from "date-fns";
+import { format, startOfDay, isBefore, isToday, isTomorrow, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 
 const ScannerManagement = () => {
@@ -149,9 +149,9 @@ const ScannerManagement = () => {
   };
 
   const handleEdit = (signal: any) => {
-    const [teamA, teamB] = signal.match.includes(" vs ") 
-      ? signal.match.split(" vs ") 
-      : [signal.match, ""];
+    const teams = signal.match ? signal.match.split(/\s+v\.?s\.?\s+/i) : ["", ""];
+    const teamA = teams[0] || signal.match || "";
+    const teamB = teams.length > 1 ? teams[1] : "";
     
     // Parse date and time from created_at
     const dateObj = new Date(signal.created_at);
@@ -226,7 +226,24 @@ const ScannerManagement = () => {
     // Check if the signal is from today or future
     const isPast = isBefore(new Date(signal.created_at), startOfDay(new Date()));
     return matchesSearch && !isPast;
-  });
+  })?.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+  // Group signals by Date string (e.g., "2024-10-25")
+  const groupedSignals = filteredSignals?.reduce((groups, signal) => {
+    const date = format(new Date(signal.created_at), 'yyyy-MM-dd');
+    if (!groups[date]) {
+      groups[date] = [];
+    }
+    groups[date].push(signal);
+    return groups;
+  }, {} as Record<string, typeof signals>);
+
+  const getDateLabel = (dateStr: string) => {
+    const date = parseISO(dateStr);
+    if (isToday(date)) return "HOY";
+    if (isTomorrow(date)) return "MAÑANA";
+    return format(date, "EEEE, d 'de' MMMM", { locale: es }).toUpperCase();
+  };
 
   return (
     <div className="space-y-6">
@@ -578,57 +595,69 @@ const ScannerManagement = () => {
                 </TableCell>
               </TableRow>
             ) : (
-              filteredSignals?.map((signal) => (
-                <TableRow key={signal.id}>
-                  <TableCell className="font-mono text-xs">
-                    {format(new Date(signal.created_at), "dd/MM HH:mm", { locale: es })}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col">
-                      <span className="font-medium text-white capitalize">{signal.sport}</span>
-                      <span className="text-xs text-muted-foreground">{signal.league}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-medium text-white">
-                    {signal.match}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col">
-                      <span className="text-primary font-bold">{signal.market}</span>
-                      <span className="text-xs font-mono">@{signal.odds}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-2">
-                         <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded
-                          ${signal.confidence === 'high' ? 'bg-primary/20 text-primary' : 
-                            signal.confidence === 'low' ? 'bg-red-500/20 text-red-500' : 
-                            'bg-yellow-500/20 text-yellow-500'}`}>
-                           {signal.confidence === 'high' ? 'Alta' : signal.confidence === 'low' ? 'Baja' : 'Media'}
-                         </span>
-                         <span className="text-xs font-mono text-muted-foreground">Prob {signal.stake}%</span>
-                      </div>
-                      <span className={`inline-flex w-fit items-center px-2 py-0.5 rounded text-xs font-medium capitalize
-                        ${signal.status === 'won' ? 'bg-green-500/10 text-green-500' : 
-                          signal.status === 'lost' ? 'bg-red-500/10 text-red-500' :
-                          signal.status === 'void' ? 'bg-yellow-500/10 text-yellow-500' :
-                          'bg-blue-500/10 text-blue-500'}`}>
-                        {signal.status === 'pending' ? 'Pendiente' : signal.status}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary" onClick={() => handleEdit(signal)}>
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-destructive" onClick={() => handleDelete(signal.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
+              Object.entries(groupedSignals || {}).map(([dateStr, daySignals]) => (
+                <React.Fragment key={dateStr}>
+                  {/* Date Header Row */}
+                  <TableRow className="bg-primary/10 hover:bg-primary/10 border-y border-primary/20">
+                    <TableCell colSpan={6} className="py-2 text-primary font-bold text-sm tracking-wider">
+                      {getDateLabel(dateStr)}
+                    </TableCell>
+                  </TableRow>
+                  
+                  {/* Signals for this day */}
+                  {daySignals.map((signal) => (
+                    <TableRow key={signal.id} className="border-b border-border/50 last:border-0 hover:bg-muted/30">
+                      <TableCell className="font-mono text-sm text-white font-medium">
+                        {format(new Date(signal.created_at), "HH:mm")}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-medium text-white capitalize">{signal.sport}</span>
+                          <span className="text-xs text-muted-foreground">{signal.league}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-medium text-white">
+                        {signal.match}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="text-primary font-bold">{signal.market}</span>
+                          <span className="text-xs font-mono">@{signal.odds}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded
+                              ${signal.confidence === 'high' ? 'bg-primary/20 text-primary' : 
+                                signal.confidence === 'low' ? 'bg-red-500/20 text-red-500' : 
+                                'bg-yellow-500/20 text-yellow-500'}`}>
+                              {signal.confidence === 'high' ? 'Alta' : signal.confidence === 'low' ? 'Baja' : 'Media'}
+                            </span>
+                            <span className="text-xs font-mono text-muted-foreground">Prob {signal.stake}%</span>
+                          </div>
+                          <span className={`inline-flex w-fit items-center px-2 py-0.5 rounded text-xs font-medium capitalize
+                            ${signal.status === 'won' ? 'bg-green-500/10 text-green-500' : 
+                              signal.status === 'lost' ? 'bg-red-500/10 text-red-500' :
+                              signal.status === 'void' ? 'bg-yellow-500/10 text-yellow-500' :
+                              'bg-blue-500/10 text-blue-500'}`}>
+                            {signal.status === 'pending' ? 'Pendiente' : signal.status}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary" onClick={() => handleEdit(signal)}>
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-destructive" onClick={() => handleDelete(signal.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </React.Fragment>
               ))
             )}
           </TableBody>

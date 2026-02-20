@@ -31,10 +31,10 @@ const SignalCard = ({ signal, index, isLocked = false, onUnlock }: SignalCardPro
   const [expanded, setExpanded] = useState(false);
   const { toast } = useToast();
 
-  // Parse teams from match string if not provided
-  const [teamA, teamB] = signal.match.includes(" vs ") 
-    ? signal.match.split(" vs ") 
-    : [signal.match, ""];
+  // Parse teams robustly using regex to catch "vs", "vs.", "VS", "v.s." etc.
+  const teams = signal.match.split(/\s+v\.?s\.?\s+/i);
+  const teamA = teams[0] || signal.match;
+  const teamB = teams.length > 1 ? teams[1] : "";
 
   // Format time (just show time part or relative)
   const timeDisplay = new Date(signal.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });

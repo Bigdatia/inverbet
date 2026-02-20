@@ -1,5 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { format, isToday, isTomorrow, parseISO } from "date-fns";
+import { es } from "date-fns/locale";
 import { motion } from "framer-motion";
 import SignalCard from "@/components/dashboard/SignalCard";
 import SignalCardSkeleton from "@/components/dashboard/SignalCardSkeleton";
@@ -58,11 +60,32 @@ const Scanner = () => {
 
     if (activeFilter === "all") return true;
     if (activeFilter === "high") return signal.confidence === "high";
-    if (activeFilter === "football") return signal.sport === "futbol";
-    if (activeFilter === "tennis") return signal.sport === "tenis";
-    if (activeFilter === "basketball") return signal.sport === "basket";
+    
+    // Normalize string to ignore case and accents
+    const normalizedSport = signal.sport?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") || "";
+    
+    if (activeFilter === "football") return normalizedSport.includes("futbol");
+    if (activeFilter === "tennis") return normalizedSport.includes("tenis");
+    if (activeFilter === "basketball") return normalizedSport.includes("basket");
     return true;
-  });
+  })?.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+  // Group signals by Date string (e.g., "2024-10-25")
+  const groupedSignals = filteredSignals?.reduce((groups, signal) => {
+    const date = format(new Date(signal.created_at), 'yyyy-MM-dd');
+    if (!groups[date]) {
+      groups[date] = [];
+    }
+    groups[date].push(signal);
+    return groups;
+  }, {} as Record<string, typeof signals>);
+
+  const getDateLabel = (dateStr: string) => {
+    const date = parseISO(dateStr);
+    if (isToday(date)) return "HOY";
+    if (isTomorrow(date)) return "MAÑANA";
+    return format(date, "EEEE, d 'de' MMMM", { locale: es }).toUpperCase();
+  };
 
   return (
     <div className="space-y-6">
@@ -109,24 +132,42 @@ const Scanner = () => {
       </motion.div>
 
       {/* Signals Grid */}
-      {/* Signals Grid */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="space-y-8">
         {loading ? (
-          <>
+          <div className="grid gap-4 md:grid-cols-2">
             <SignalCardSkeleton />
             <SignalCardSkeleton />
             <SignalCardSkeleton />
             <SignalCardSkeleton />
-          </>
+          </div>
+        ) : filteredSignals.length === 0 ? (
+          <div className="text-center py-10">
+            <p className="text-muted-foreground">No hay señales para mostrar en este filtro.</p>
+          </div>
         ) : (
-          filteredSignals.map((signal, index) => (
-            <SignalCard 
-              key={signal.id} 
-              signal={signal} 
-              index={index} 
-              isLocked={!isPro}
-              onUnlock={() => setShowPaymentModal(true)}
-            />
+          Object.entries(groupedSignals || {}).map(([dateStr, daySignals]) => (
+            <div key={dateStr} className="space-y-4">
+              {/* Date Section Header */}
+              <div className="flex items-center gap-3">
+                <h3 className="text-sm font-bold text-primary tracking-wider">
+                  {getDateLabel(dateStr)}
+                </h3>
+                <div className="h-px flex-1 bg-border/50" />
+              </div>
+
+              {/* Day Signals Grid */}
+              <div className="grid gap-4 md:grid-cols-2">
+                {daySignals.map((signal, index) => (
+                  <SignalCard 
+                    key={signal.id} 
+                    signal={signal as any} 
+                    index={index} 
+                    isLocked={!isPro}
+                    onUnlock={() => setShowPaymentModal(true)}
+                  />
+                ))}
+              </div>
+            </div>
           ))
         )}
       </div>
