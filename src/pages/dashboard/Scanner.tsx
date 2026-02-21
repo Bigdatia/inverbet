@@ -1,7 +1,7 @@
 import { useState, useEffect, Fragment } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { format, isToday, isTomorrow, parseISO, startOfDay, isBefore } from "date-fns";
-import { es } from "date-fns/locale";
+import { es, enUS } from "date-fns/locale";
 import { motion } from "framer-motion";
 import SignalCard from "@/components/dashboard/SignalCard";
 import SignalCardSkeleton from "@/components/dashboard/SignalCardSkeleton";
@@ -10,24 +10,24 @@ import { useAuth } from "@/context/AuthContext";
 import { PaymentFormContent } from "@/components/checkout/ManualPaymentForm";
 import ManualPaymentForm from "@/components/checkout/ManualPaymentForm";
 import { Lock } from "lucide-react";
-
-const filters = [
-  { id: "all", label: "Todos" },
-  { id: "today", label: "Hoy" },
-  { id: "high", label: "Alta Probabilidad" },
-];
+import { useLanguage } from "@/context/LanguageContext";
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-// ... (keep filters array)
 
 const Scanner = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isPro } = useAuth();
+  const { t, language } = useLanguage();
   const [activeFilter, setActiveFilter] = useState("all");
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+
+  const filters = [
+    { id: "all", label: t.dashboard.scanner.filters.all },
+    { id: "today", label: t.dashboard.scanner.filters.today },
+    { id: "high", label: t.dashboard.scanner.filters.high },
+  ];
 
   // Fetch signals from Supabase
   const { data: signals = [], isLoading: loading } = useQuery({
@@ -79,11 +79,13 @@ const Scanner = () => {
     return groups;
   }, {} as Record<string, typeof signals>);
 
+  const dateLocale = language === 'es' ? es : enUS;
+
   const getDateLabel = (dateStr: string) => {
     const date = parseISO(dateStr);
-    if (isToday(date)) return "HOY";
-    if (isTomorrow(date)) return "MAÑANA";
-    return format(date, "EEEE, d 'de' MMMM", { locale: es }).toUpperCase();
+    if (isToday(date)) return t.dashboard.scanner.today_label;
+    if (isTomorrow(date)) return t.dashboard.scanner.tomorrow_label;
+    return format(date, language === 'es' ? "EEEE, d 'de' MMMM" : "EEEE, MMMM d", { locale: dateLocale }).toUpperCase();
   };
 
   return (
@@ -113,20 +115,20 @@ const Scanner = () => {
         className="flex items-center gap-4 p-4 bg-secondary/30 border border-border rounded-xl flex-wrap"
       >
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Señales activas/hoy:</span>
+          <span className="text-sm text-muted-foreground">{t.dashboard.scanner.active_signals}</span>
           <span className="font-mono text-lg font-bold text-primary">{filteredSignals.length}</span>
         </div>
         <div className="hidden sm:block h-4 w-px bg-border" />
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Alta confianza:</span>
+          <span className="text-sm text-muted-foreground">{t.dashboard.scanner.high_confidence}</span>
           <span className="font-mono text-lg font-bold text-primary">
             {filteredSignals.filter((s) => s.confidence === "high").length}
           </span>
         </div>
         <div className="h-4 w-px bg-border hidden sm:block" />
         <div className="hidden sm:flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Analizando:</span>
-          <span className="font-mono text-sm text-accent">1,847 partidos</span>
+          <span className="text-sm text-muted-foreground">{t.dashboard.scanner.analyzing}</span>
+          <span className="font-mono text-sm text-accent">{t.dashboard.scanner.analyzing_matches}</span>
         </div>
       </motion.div>
 
@@ -141,7 +143,7 @@ const Scanner = () => {
           </div>
         ) : filteredSignals.length === 0 ? (
           <div className="text-center py-10">
-            <p className="text-muted-foreground">No hay señales para mostrar en este filtro.</p>
+            <p className="text-muted-foreground">{t.dashboard.scanner.no_signals}</p>
           </div>
         ) : (
           Object.entries(groupedSignals || {}).map(([dateStr, daySignals]) => (
@@ -186,18 +188,18 @@ const Scanner = () => {
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
             <span className="text-xs font-bold text-accent uppercase tracking-wider mb-1 block">
-              ¿Nuevo aquí?
+              {t.dashboard.scanner.new_here}
             </span>
             <h3 className="font-display text-lg font-bold mb-1">
-              Empieza por la Academy
+              {t.dashboard.scanner.start_academy}
             </h3>
             <p className="text-sm text-muted-foreground">
-              Aprende la estrategia del 1% antes de empezar a usar las señales.
+              {t.dashboard.scanner.start_academy_desc}
             </p>
           </div>
           <div className="flex items-center gap-4">
             <div className="bg-secondary rounded-xl p-3 min-w-[120px]">
-              <div className="text-xs text-muted-foreground mb-1">Progreso</div>
+              <div className="text-xs text-muted-foreground mb-1">{t.dashboard.scanner.progress}</div>
               <div className="flex items-center gap-2">
                 <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                   <div className="h-full w-0 bg-primary rounded-full" />
@@ -212,7 +214,7 @@ const Scanner = () => {
               }}
               className="px-4 py-2 bg-accent text-accent-foreground rounded-lg font-medium hover:bg-accent/90 transition-colors whitespace-nowrap"
             >
-              Ir a Academy
+              {t.dashboard.scanner.go_academy}
             </button>
           </div>
         </div>

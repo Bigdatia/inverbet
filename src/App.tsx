@@ -22,6 +22,7 @@ const Scanner = lazy(() => import("./pages/dashboard/Scanner"));
 const Academy = lazy(() => import("./pages/dashboard/Academy"));
 const Stats = lazy(() => import("./pages/dashboard/Stats"));
 const Profile = lazy(() => import("./pages/dashboard/Profile"));
+const FAQ = lazy(() => import("./pages/FAQ"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminLayout = lazy(() => import("./components/admin/AdminLayout"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
@@ -56,6 +57,7 @@ const App = () => (
                   <Route path="/update-password" element={<UpdatePassword />} />
                   <Route path="/terms" element={<TermsOfService />} />
                   <Route path="/privacy" element={<PrivacyPolicy />} />
+                  <Route path="/faq" element={<FAQ />} />
                   <Route path="/dashboard" element={<DashboardLayout />}>
                     <Route index element={<Scanner />} />
                     <Route path="academy" element={<Academy />} />

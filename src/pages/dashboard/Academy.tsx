@@ -5,57 +5,24 @@ import { useAuth } from "@/context/AuthContext";
 import ManualPaymentForm from "@/components/checkout/ManualPaymentForm";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-
-const modules = [
-  {
-    id: 1,
-    title: "Módulo 1: La Regla del 1%",
-    description: "Aprende por qué nunca debes apostar más del 1% de tu bankroll en una sola apuesta.",
-    duration: "12 min",
-    status: "available",
-    progress: 0,
-  },
-  {
-    id: 2,
-    title: "Módulo 2: Gestión del Bankroll",
-    description: "Estrategias profesionales para proteger y hacer crecer tu capital.",
-    duration: "18 min",
-    status: "locked",
-    progress: 0,
-  },
-  {
-    id: 3,
-    title: "Módulo 3: Entendiendo las Cuotas",
-    description: "Cómo funcionan las cuotas y cómo el algoritmo detecta errores de mercado.",
-    duration: "15 min",
-    status: "locked",
-    progress: 0,
-  },
-  {
-    id: 4,
-    title: "Módulo 4: Value Betting",
-    description: "La estrategia matemática detrás de las apuestas de valor.",
-    duration: "22 min",
-    status: "locked",
-    progress: 0,
-  },
-  {
-    id: 5,
-    title: "Módulo 5: Psicología del Apostador",
-    description: "Controla tus emociones y evita las trampas mentales más comunes.",
-    duration: "14 min",
-    status: "locked",
-    progress: 0,
-  },
-];
+import { useLanguage } from "@/context/LanguageContext";
 
 const Academy = () => {
   const { isPro } = useAuth();
+  const { t } = useLanguage();
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const completedModules = modules.filter((m) => m.status === "completed").length;
+
+  const modules = t.dashboard.academy.modules.map((mod: { title: string; description: string }, index: number) => ({
+    id: index + 1,
+    title: mod.title,
+    description: mod.description,
+    duration: ["12 min", "18 min", "15 min", "22 min", "14 min"][index],
+    status: index === 0 ? "available" : "locked",
+    progress: 0,
+  }));
+
+  const completedModules = modules.filter((m: any) => m.status === "completed").length;
   const totalProgress = Math.round((completedModules / modules.length) * 100);
-
-
 
   return (
     <div className="space-y-6">
@@ -74,15 +41,15 @@ const Academy = () => {
               </span>
             </div>
             <h1 className="font-display text-2xl font-bold mb-2">
-              Estrategia Maestra de Gestión de Capital
+              {t.dashboard.academy.title}
             </h1>
             <p className="text-muted-foreground max-w-xl">
-              Antes de usar las señales, domina los fundamentos. Este curso te enseñará a proteger tu dinero como un profesional.
+              {t.dashboard.academy.subtitle}
             </p>
           </div>
           
           <div className="bg-secondary rounded-xl p-4 min-w-[160px]">
-            <div className="text-sm text-muted-foreground mb-2">Tu Progreso</div>
+            <div className="text-sm text-muted-foreground mb-2">{t.dashboard.academy.your_progress}</div>
             <div className="flex items-center gap-3">
               <div className="flex-1 h-3 bg-muted rounded-full overflow-hidden">
                 <div
@@ -93,20 +60,16 @@ const Academy = () => {
               <span className="font-mono text-xl font-bold text-primary">{totalProgress}%</span>
             </div>
             <div className="text-xs text-muted-foreground mt-2">
-              {completedModules} de {modules.length} módulos
+              {completedModules} {t.dashboard.academy.of} {modules.length} {t.dashboard.academy.modules_count}
             </div>
           </div>
         </div>
       </motion.div>
 
       <div className="space-y-3">
-        {modules.map((module, index) => {
-          // Logic: First module (index 0) is free. All others (index > 0) require Pro.
-          // If isPro is true, everything is unlocked (unless module itself is 'locked' by default in data, but let's assume Pro unlocks all 'content' gating).
-          // Actually, let's override the mock data 'status' with our real logic.
-          
+        {modules.map((module: any, index: number) => {
           const isLocked = !isPro && index > 0;
-          const isCompleted = module.status === "completed"; // Keep mock status for now or assume 0
+          const isCompleted = module.status === "completed";
           const isAvailable = !isLocked;
 
           return (
@@ -149,7 +112,7 @@ const Academy = () => {
                     <h3 className="font-display font-bold truncate">{module.title}</h3>
                     {isAvailable && !isCompleted && index === 0 && (
                       <span className="text-xs px-2 py-0.5 bg-accent/20 text-accent rounded-full font-medium">
-                        Gratis
+                        {t.dashboard.academy.free}
                       </span>
                     )}
                   </div>
@@ -171,13 +134,13 @@ const Academy = () => {
                    <div className="bg-background/80 p-4 rounded-xl border border-border shadow-lg flex flex-col items-center gap-3">
                       <div className="flex items-center gap-2 text-primary font-bold">
                         <Lock className="h-4 w-4" />
-                        <span>Contenido Premium</span>
+                        <span>{t.dashboard.academy.premium_content}</span>
                       </div>
                       <Button 
                         onClick={() => setShowPaymentModal(true)}
                         className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold glow-green"
                       >
-                        Hazte PRO
+                        {t.dashboard.academy.go_pro}
                       </Button>
                    </div>
                  </div>
@@ -217,8 +180,8 @@ const Academy = () => {
         className="text-center py-6"
       >
         <p className="text-muted-foreground text-sm">
-          Completa todos los módulos para desbloquear el{" "}
-          <span className="text-primary font-medium">Certificado Inverbet Pro</span>
+          {t.dashboard.academy.complete_all}{" "}
+          <span className="text-primary font-medium">{t.dashboard.academy.certificate}</span>
         </p>
       </motion.div>
     </div>

@@ -31,9 +31,11 @@ import { Switch } from "@/components/ui/switch";
 import { Plus, Search, Trash2, Edit2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { format, startOfDay, isBefore, isToday, isTomorrow, parseISO } from "date-fns";
-import { es } from "date-fns/locale";
+import { es, enUS } from "date-fns/locale";
+import { useLanguage } from "@/context/LanguageContext";
 
 const ScannerManagement = () => {
+  const { t, language } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [showOnlyUpcoming, setShowOnlyUpcoming] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -52,7 +54,7 @@ const ScannerManagement = () => {
     type: "prematch",
     market: "",
     odds: "",
-    stake: "85", // represents probability now
+    stake: "85",
     confidence: "high",
     status: "pending",
     analysis: "",
@@ -68,7 +70,7 @@ const ScannerManagement = () => {
         .order("created_at", { ascending: false });
       
       if (error) {
-        toast.error("Error al cargar señales");
+        toast.error(t.dashboard.admin.scanner.error_load);
         throw error;
       }
       return data;
@@ -81,14 +83,14 @@ const ScannerManagement = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Señal creada correctamente");
+      toast.success(t.dashboard.admin.scanner.signal_created);
       setIsDialogOpen(false);
       resetForm();
       queryClient.invalidateQueries({ queryKey: ["signals-admin"] });
     },
     onError: (error) => {
       console.error(error);
-      toast.error("Error al crear la señal");
+      toast.error(t.dashboard.admin.scanner.error_create);
     }
   });
 
@@ -101,15 +103,15 @@ const ScannerManagement = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Señal actualizada correctamente");
+      toast.success(t.dashboard.admin.scanner.signal_updated);
       setIsDialogOpen(false);
       resetForm();
       queryClient.invalidateQueries({ queryKey: ["signals-admin"] });
-      queryClient.invalidateQueries({ queryKey: ["signals"] }); // Update user view too
+      queryClient.invalidateQueries({ queryKey: ["signals"] });
     },
     onError: (error) => {
       console.error(error);
-      toast.error("Error al actualizar la señal");
+      toast.error(t.dashboard.admin.scanner.error_update);
     }
   });
 
@@ -119,12 +121,12 @@ const ScannerManagement = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Señal eliminada");
+      toast.success(t.dashboard.admin.scanner.signal_deleted);
       queryClient.invalidateQueries({ queryKey: ["signals-admin"] });
       queryClient.invalidateQueries({ queryKey: ["signals"] });
     },
     onError: (error) => {
-      toast.error("Error al eliminar la señal");
+      toast.error(t.dashboard.admin.scanner.error_delete);
     }
   });
 
@@ -153,7 +155,6 @@ const ScannerManagement = () => {
     const teamA = teams[0] || signal.match || "";
     const teamB = teams.length > 1 ? teams[1] : "";
     
-    // Parse date and time from created_at
     const dateObj = new Date(signal.created_at);
     const dateStr = format(dateObj, "yyyy-MM-dd");
     const timeStr = format(dateObj, "HH:mm");
@@ -169,17 +170,17 @@ const ScannerManagement = () => {
       type: signal.type,
       market: signal.market,
       odds: signal.odds.toString(),
-      stake: signal.stake.toString(), // represents probability
+      stake: signal.stake.toString(),
       confidence: signal.confidence || "high",
       status: signal.status || "pending",
       analysis: signal.analysis || "",
-      is_premium: true // Always true now
+      is_premium: true
     });
     setIsDialogOpen(true);
   };
 
   const handleDelete = (id: string) => {
-    if (confirm("¿Estás seguro de que deseas eliminar esta señal?")) {
+    if (confirm(t.dashboard.admin.scanner.confirm_delete)) {
       deleteSignalMutation.mutate(id);
     }
   };
@@ -187,7 +188,7 @@ const ScannerManagement = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.teamA || !formData.teamB || !formData.market || !formData.odds) {
-      toast.error("Por favor completa los campos obligatorios");
+      toast.error(t.dashboard.admin.scanner.required_fields);
       return;
     }
 
@@ -202,11 +203,11 @@ const ScannerManagement = () => {
       type: formData.type,
       market: formData.market,
       odds: parseFloat(formData.odds),
-      stake: parseInt(formData.stake), // Saving probability into stake column
+      stake: parseInt(formData.stake),
       confidence: formData.confidence,
       status: formData.status,
       analysis: formData.analysis,
-      is_premium: true, // Force all to be premium
+      is_premium: true,
       created_at: matchDate,
     };
 
@@ -223,12 +224,10 @@ const ScannerManagement = () => {
     
     if (!showOnlyUpcoming) return matchesSearch;
     
-    // Check if the signal is from today or future
     const isPast = isBefore(new Date(signal.created_at), startOfDay(new Date()));
     return matchesSearch && !isPast;
   })?.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
-  // Group signals by Date string (e.g., "2024-10-25")
   const groupedSignals = filteredSignals?.reduce((groups, signal) => {
     const date = format(new Date(signal.created_at), 'yyyy-MM-dd');
     if (!groups[date]) {
@@ -238,19 +237,21 @@ const ScannerManagement = () => {
     return groups;
   }, {} as Record<string, typeof signals>);
 
+  const dateLocale = language === 'es' ? es : enUS;
+
   const getDateLabel = (dateStr: string) => {
     const date = parseISO(dateStr);
-    if (isToday(date)) return "HOY";
-    if (isTomorrow(date)) return "MAÑANA";
-    return format(date, "EEEE, d 'de' MMMM", { locale: es }).toUpperCase();
+    if (isToday(date)) return t.dashboard.admin.scanner.today_label;
+    if (isTomorrow(date)) return t.dashboard.admin.scanner.tomorrow_label;
+    return format(date, language === 'es' ? "EEEE, d 'de' MMMM" : "EEEE, MMMM d", { locale: dateLocale }).toUpperCase();
   };
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-white">Gestión de Scanner</h2>
-          <p className="text-muted-foreground">Administra las señales y alertas deportivas.</p>
+          <h2 className="text-2xl font-bold text-white">{t.dashboard.admin.scanner.title}</h2>
+          <p className="text-muted-foreground">{t.dashboard.admin.scanner.subtitle}</p>
         </div>
         
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
@@ -263,8 +264,7 @@ const ScannerManagement = () => {
               className="border-primary text-primary hover:bg-primary/10"
               onClick={async () => {
                 try {
-                  toast.loading("Importando histórico...");
-                  // Based on the user's Excel image provided
+                  toast.loading(t.dashboard.admin.scanner.importing);
                   const historicalSignals = [
                     // 11 Feb
                     { match: "Man. City vs. Fulham", date: "2024-02-11T12:00:00Z", market: "Over 0.5 Goles 1T", odds: 1.33, status: "won" },
@@ -329,34 +329,34 @@ const ScannerManagement = () => {
                     await supabase.from("signals").insert([payload]);
                   }
                   toast.dismiss();
-                  toast.success("Histórico importado correctamente!");
+                  toast.success(t.dashboard.admin.scanner.import_success);
                   queryClient.invalidateQueries({ queryKey: ["signals-admin"] });
                 } catch(e) {
                   toast.dismiss();
-                  toast.error("Error importando");
+                  toast.error(t.dashboard.admin.scanner.import_error);
                 }
               }}
             >
-              Cargar Histórico
+              {t.dashboard.admin.scanner.load_history}
             </Button>
             <DialogTrigger asChild>
               <Button className="bg-primary hover:bg-primary/90 text-black font-bold" onClick={resetForm}>
                 <Plus className="mr-2 h-4 w-4" />
-                Nueva Señal
+                {t.dashboard.admin.scanner.new_signal}
               </Button>
             </DialogTrigger>
           </div>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card border-border">
             <DialogHeader>
-              <DialogTitle>{editingId ? "Editar Señal" : "Crear Nueva Señal"}</DialogTitle>
+              <DialogTitle>{editingId ? t.dashboard.admin.scanner.edit_signal : t.dashboard.admin.scanner.create_signal}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4 mt-4">
               
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Liga / Torneo</Label>
+                  <Label>{t.dashboard.admin.scanner.form.league}</Label>
                   <Input 
-                    placeholder="Ej. Premier League"
+                    placeholder={t.dashboard.admin.scanner.form.league_placeholder}
                     value={formData.league}
                     onChange={(e) => setFormData({...formData, league: e.target.value})}
                   />
@@ -365,17 +365,17 @@ const ScannerManagement = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Equipo Local (A)</Label>
+                  <Label>{t.dashboard.admin.scanner.form.team_a}</Label>
                   <Input 
-                    placeholder="Local"
+                    placeholder={t.dashboard.admin.scanner.form.team_a_placeholder}
                     value={formData.teamA}
                     onChange={(e) => setFormData({...formData, teamA: e.target.value})}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Equipo Visitante (B)</Label>
+                  <Label>{t.dashboard.admin.scanner.form.team_b}</Label>
                   <Input 
-                    placeholder="Visitante"
+                    placeholder={t.dashboard.admin.scanner.form.team_b_placeholder}
                     value={formData.teamB}
                     onChange={(e) => setFormData({...formData, teamB: e.target.value})}
                   />
@@ -384,7 +384,7 @@ const ScannerManagement = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Fecha Partido</Label>
+                  <Label>{t.dashboard.admin.scanner.form.match_date}</Label>
                   <Input 
                     type="date"
                     value={formData.date}
@@ -392,7 +392,7 @@ const ScannerManagement = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Hora</Label>
+                  <Label>{t.dashboard.admin.scanner.form.time}</Label>
                   <Input 
                     type="time"
                     value={formData.time}
@@ -403,15 +403,15 @@ const ScannerManagement = () => {
 
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2 col-span-2">
-                  <Label>Mercado / Pronóstico</Label>
+                  <Label>{t.dashboard.admin.scanner.form.market}</Label>
                   <Input 
-                    placeholder="Ej. Gana Local, Over 2.5..."
+                    placeholder={t.dashboard.admin.scanner.form.market_placeholder}
                     value={formData.market}
                     onChange={(e) => setFormData({...formData, market: e.target.value})}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Cuota (Odds)</Label>
+                  <Label>{t.dashboard.admin.scanner.form.odds}</Label>
                   <Input 
                     type="number" 
                     step="0.01"
@@ -423,7 +423,6 @@ const ScannerManagement = () => {
                       let newProbStr = formData.stake;
                       let newConfidence = formData.confidence;
 
-                      // Calculate implied probability: (100 / odds)
                       if (!isNaN(newOdds) && newOdds > 1) {
                         const calculatedProb = Math.round(100 / newOdds);
                         newProbStr = calculatedProb.toString();
@@ -443,7 +442,7 @@ const ScannerManagement = () => {
 
               <div className="grid grid-cols-3 gap-4">
                  <div className="space-y-2">
-                  <Label>Tipo</Label>
+                  <Label>{t.dashboard.admin.scanner.form.type}</Label>
                   <Select 
                     value={formData.type} 
                     onValueChange={(val) => setFormData({...formData, type: val})}
@@ -452,13 +451,13 @@ const ScannerManagement = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="prematch">Pre-Match</SelectItem>
-                      <SelectItem value="live">En Vivo</SelectItem>
+                      <SelectItem value="prematch">{t.dashboard.admin.scanner.form.prematch}</SelectItem>
+                      <SelectItem value="live">{t.dashboard.admin.scanner.form.live}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Probabilidad (%)</Label>
+                  <Label>{t.dashboard.admin.scanner.form.probability}</Label>
                   <Input 
                     type="number"
                     min="0"
@@ -470,7 +469,7 @@ const ScannerManagement = () => {
                   />
                 </div>
                  <div className="space-y-2">
-                  <Label>Confianza (Automática)</Label>
+                  <Label>{t.dashboard.admin.scanner.form.confidence_auto}</Label>
                   <Select 
                     value={formData.confidence}
                     disabled
@@ -479,17 +478,17 @@ const ScannerManagement = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="low">Baja</SelectItem>
-                      <SelectItem value="medium">Media</SelectItem>
-                      <SelectItem value="high">Alta</SelectItem>
+                      <SelectItem value="low">{t.dashboard.admin.scanner.form.confidence_low}</SelectItem>
+                      <SelectItem value="medium">{t.dashboard.admin.scanner.form.confidence_medium}</SelectItem>
+                      <SelectItem value="high">{t.dashboard.admin.scanner.form.confidence_high}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
-              {/* Status Field - Only useful for editing or updating results */}
+              {/* Status Field */}
               <div className="space-y-2">
-                <Label>Estado del Pronóstico</Label>
+                <Label>{t.dashboard.admin.scanner.form.status_label}</Label>
                 <Select 
                   value={formData.status} 
                   onValueChange={(val) => setFormData({...formData, status: val})}
@@ -503,18 +502,18 @@ const ScannerManagement = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="pending">Pendiente ⏳</SelectItem>
-                    <SelectItem value="won">Ganada ✅</SelectItem>
-                    <SelectItem value="lost">Perdida ❌</SelectItem>
-                    <SelectItem value="void">Nula 🟡</SelectItem>
+                    <SelectItem value="pending">{t.dashboard.admin.scanner.form.status_pending}</SelectItem>
+                    <SelectItem value="won">{t.dashboard.admin.scanner.form.status_won}</SelectItem>
+                    <SelectItem value="lost">{t.dashboard.admin.scanner.form.status_lost}</SelectItem>
+                    <SelectItem value="void">{t.dashboard.admin.scanner.form.status_void}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label>Análisis (Opcional)</Label>
+                <Label>{t.dashboard.admin.scanner.form.analysis}</Label>
                 <Textarea 
-                  placeholder="Explica por qué elegiste este pronóstico..."
+                  placeholder={t.dashboard.admin.scanner.form.analysis_placeholder}
                   value={formData.analysis}
                   onChange={(e) => setFormData({...formData, analysis: e.target.value})}
                   rows={3}
@@ -523,7 +522,7 @@ const ScannerManagement = () => {
 
               <Button type="submit" className="w-full bg-primary text-black font-bold mt-4" disabled={createSignalMutation.isPending || updateSignalMutation.isPending}>
                 {(createSignalMutation.isPending || updateSignalMutation.isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {editingId ? "Actualizar Señal" : "Publicar Señal"}
+                {editingId ? t.dashboard.admin.scanner.update_btn : t.dashboard.admin.scanner.publish_btn}
               </Button>
             </form>
           </DialogContent>
@@ -534,7 +533,7 @@ const ScannerManagement = () => {
         <div className="flex items-center gap-2 bg-secondary/20 p-2 rounded-lg border border-border/50 w-full sm:max-w-md">
           <Search className="h-4 w-4 text-muted-foreground" />
           <Input 
-            placeholder="Buscar por partido o liga..." 
+            placeholder={t.dashboard.admin.scanner.search_placeholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="border-none bg-transparent focus-visible:ring-0 h-auto p-0"
@@ -548,7 +547,7 @@ const ScannerManagement = () => {
             id="filter-past"
           />
           <Label htmlFor="filter-past" className="text-sm cursor-pointer mb-0">
-            Ocultar Anteriores a Hoy
+            {t.dashboard.admin.scanner.hide_past}
           </Label>
         </div>
       </div>
@@ -557,25 +556,25 @@ const ScannerManagement = () => {
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50 hover:bg-muted/50">
-              <TableHead>Hora / Fecha</TableHead>
-              <TableHead>Deporte / Liga</TableHead>
-              <TableHead>Partido</TableHead>
-              <TableHead>Mercado / Cuota</TableHead>
-              <TableHead>Prob/Confianza/Estado</TableHead>
-              <TableHead className="text-right">Acciones</TableHead>
+              <TableHead>{t.dashboard.admin.scanner.cols.time_date}</TableHead>
+              <TableHead>{t.dashboard.admin.scanner.cols.sport_league}</TableHead>
+              <TableHead>{t.dashboard.admin.scanner.cols.match}</TableHead>
+              <TableHead>{t.dashboard.admin.scanner.cols.market_odds}</TableHead>
+              <TableHead>{t.dashboard.admin.scanner.cols.prob_conf_status}</TableHead>
+              <TableHead className="text-right">{t.dashboard.admin.scanner.cols.actions}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
                 <TableCell colSpan={6} className="h-24 text-center">
-                  Cargando señales...
+                  {t.dashboard.admin.scanner.loading}
                 </TableCell>
               </TableRow>
             ) : filteredSignals?.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                  No hay señales registradas.
+                  {t.dashboard.admin.scanner.no_signals}
                 </TableCell>
               </TableRow>
             ) : (
@@ -616,16 +615,16 @@ const ScannerManagement = () => {
                               ${signal.confidence === 'high' ? 'bg-primary/20 text-primary' : 
                                 signal.confidence === 'low' ? 'bg-red-500/20 text-red-500' : 
                                 'bg-yellow-500/20 text-yellow-500'}`}>
-                              {signal.confidence === 'high' ? 'Alta' : signal.confidence === 'low' ? 'Baja' : 'Media'}
+                              {signal.confidence === 'high' ? t.dashboard.admin.scanner.form.confidence_high : signal.confidence === 'low' ? t.dashboard.admin.scanner.form.confidence_low : t.dashboard.admin.scanner.form.confidence_medium}
                             </span>
-                            <span className="text-xs font-mono text-muted-foreground">Prob {signal.stake}%</span>
+                            <span className="text-xs font-mono text-muted-foreground">{t.dashboard.admin.scanner.prob_label} {signal.stake}%</span>
                           </div>
                           <span className={`inline-flex w-fit items-center px-2 py-0.5 rounded text-xs font-medium capitalize
                             ${signal.status === 'won' ? 'bg-green-500/10 text-green-500' : 
                               signal.status === 'lost' ? 'bg-red-500/10 text-red-500' :
                               signal.status === 'void' ? 'bg-yellow-500/10 text-yellow-500' :
                               'bg-blue-500/10 text-blue-500'}`}>
-                            {signal.status === 'pending' ? 'Pendiente' : signal.status}
+                            {signal.status === 'pending' ? t.dashboard.admin.scanner.status_pending : signal.status}
                           </span>
                         </div>
                       </TableCell>

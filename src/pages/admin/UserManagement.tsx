@@ -14,12 +14,14 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Search, AlertCircle, MessageCircle } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
+  const { t, language } = useLanguage();
 
   const fetchUsers = async () => {
     try {
@@ -32,7 +34,7 @@ const UserManagement = () => {
       setUsers(data || []);
     } catch (error: any) {
       toast({
-        title: "Error al cargar usuarios",
+        title: t.dashboard.admin.users.error_load,
         description: error.message,
         variant: "destructive",
       });
@@ -46,12 +48,11 @@ const UserManagement = () => {
   }, []);
 
   const toggleSubscriptionTier = async (userId: string, isPro: boolean) => {
-    const newTier = isPro ? 'free' : 'premium'; // Toggle
+    const newTier = isPro ? 'free' : 'premium';
     const updateData: any = { 
       subscription_tier: newTier 
     };
     
-    // Si lo estamos pasando a PRO, lo marcamos activo y le ponemos fecha de inicio hoy
     if (newTier === 'premium') {
        updateData.subscription_status = 'active';
        updateData.subscription_start_date = new Date().toISOString();
@@ -72,8 +73,8 @@ const UserManagement = () => {
       ));
 
       toast({
-        title: "Plan actualizado",
-        description: `El usuario ahora es ${newTier === 'premium' ? 'PRO' : 'FREE'}.`,
+        title: t.dashboard.admin.users.plan_updated,
+        description: t.dashboard.admin.users.plan_updated_desc.replace('{tier}', newTier === 'premium' ? 'PRO' : 'FREE'),
       });
     } catch (error: any) {
       toast({
@@ -99,8 +100,8 @@ const UserManagement = () => {
       ));
 
       toast({
-        title: "Estado actualizado",
-        description: `El usuario ha sido ${newStatus ? 'activado' : 'desactivado'}.`,
+        title: t.dashboard.admin.users.status_updated,
+        description: t.dashboard.admin.users.status_updated_desc.replace('{status}', newStatus ? t.dashboard.admin.users.activated : t.dashboard.admin.users.deactivated),
       });
     } catch (error: any) {
       toast({
@@ -111,14 +112,16 @@ const UserManagement = () => {
     }
   };
 
+  const dateLocale = language === 'es' ? 'es-ES' : 'en-US';
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-3xl font-display font-bold">Gestión de Usuarios</h1>
+        <h1 className="text-3xl font-display font-bold">{t.dashboard.admin.users.title}</h1>
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input 
-            placeholder="Buscar por nombre o email..." 
+            placeholder={t.dashboard.admin.users.search_placeholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -130,13 +133,13 @@ const UserManagement = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nombre</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Rol</TableHead>
-              <TableHead>Fecha Registro</TableHead>
-              <TableHead>Plan</TableHead>
-              <TableHead>Último Pago</TableHead>
-              <TableHead>Estado</TableHead>
+              <TableHead>{t.dashboard.admin.users.cols.name}</TableHead>
+              <TableHead>{t.dashboard.admin.users.cols.email}</TableHead>
+              <TableHead>{t.dashboard.admin.users.cols.role}</TableHead>
+              <TableHead>{t.dashboard.admin.users.cols.registered}</TableHead>
+              <TableHead>{t.dashboard.admin.users.cols.plan}</TableHead>
+              <TableHead>{t.dashboard.admin.users.cols.last_payment}</TableHead>
+              <TableHead>{t.dashboard.admin.users.cols.status}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -152,14 +155,13 @@ const UserManagement = () => {
               const isPro = user.subscription_tier === 'premium' || user.subscription_tier === 'pro';
               
               const lastPaymentDate = user.subscription_start_date 
-                ? new Date(user.subscription_start_date).toLocaleDateString('es-ES', {
+                ? new Date(user.subscription_start_date).toLocaleDateString(dateLocale, {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric'
                   })
                 : 'N/A';
                 
-              // Expiration logic
               let isExpiringSoon = false;
               let daysRemaining = null;
               
@@ -191,7 +193,7 @@ const UserManagement = () => {
                     </span>
                   </TableCell>
                   <TableCell>
-                    {new Date(user.created_at).toLocaleDateString('es-ES', {
+                    {new Date(user.created_at).toLocaleDateString(dateLocale, {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric'
@@ -216,7 +218,7 @@ const UserManagement = () => {
                       {isExpiringSoon && (
                         <div className="flex items-center gap-1 text-xs text-red-500 font-semibold">
                           <AlertCircle className="w-3 h-3" />
-                          <span>Vence en {daysRemaining} días</span>
+                          <span>{t.dashboard.admin.users.expires_in.replace('{days}', String(daysRemaining))}</span>
                         </div>
                       )}
                     </div>
@@ -228,7 +230,7 @@ const UserManagement = () => {
                         onCheckedChange={() => toggleUserStatus(user.id, user.is_active)}
                       />
                       <span className={`text-sm ${user.is_active ? 'text-green-600' : 'text-red-500'}`}>
-                        {user.is_active ? 'Activo' : 'Inactivo'}
+                        {user.is_active ? t.dashboard.admin.users.active : t.dashboard.admin.users.inactive}
                       </span>
                     </div>
                   </TableCell>

@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface Profile {
   role: "admin" | "user" | null;
@@ -28,6 +29,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const profileRef = useRef(profile);
@@ -65,24 +67,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.log("Auth: Initializing...");
       setLoading(true);
       
-      // Failsafe: Force stop loading after 5s no matter what and clear potentially corrupted storage
+      // Failsafe: Force stop loading after 8s no matter what
       const failsafeTimer = setTimeout(() => {
-          console.warn("Auth: Failsafe triggered, forcing loading=false and clearing local storage to recover from potential corruption");
-          
-          // Clear Supabase specific local storage keys
-          try {
-            for (let i = 0; i < localStorage.length; i++) {
-              const key = localStorage.key(i);
-              if (key && key.startsWith('sb-')) {
-                localStorage.removeItem(key);
-              }
-            }
-          } catch (e) {
-            console.error("Auth: Failed to clear local storage", e);
-          }
-          
+          console.warn("Auth: Failsafe triggered, forcing loading=false");
           setLoading(false);
-      }, 5000);
+      }, 8000);
 
       try {
         console.log("Auth: Getting session...");
@@ -167,7 +156,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const handleInactivity = async () => {
       console.log("Session expired due to inactivity.");
-      toast.info("Sesión cerrada por inactividad de 30 minutos.", {
+      toast.info(t.dashboard.system.inactivity, {
          duration: 5000,
       });
       await signOut();
@@ -215,7 +204,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           // Check if subscription tier changed and force logout if it did
           if (currentProfile && newProfile.subscription_tier !== currentProfile.subscription_tier) {
              console.log("Subscription tier changed, forcing logout to ensure clean state");
-             toast.info("Tu plan ha sido actualizado. Por favor inicia sesión nuevamente.");
+             toast.info(t.dashboard.system.plan_updated);
              
              // Wait a moment for the toast to be seen, then logout
              setTimeout(() => {
@@ -244,7 +233,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               const currentProfile = profileRef.current;
               // Also check for plan change here as a backup to Realtime
               if (currentProfile && freshProfile.subscription_tier !== currentProfile.subscription_tier) {
-                 toast.info("Tu plan ha sido actualizado. Por favor inicia sesión nuevamente.");
+                  toast.info(t.dashboard.system.plan_updated);
                  setTimeout(() => signOut(), 2000);
               } else if (JSON.stringify(currentProfile) !== JSON.stringify(freshProfile)) {
                  // Only update state if the profile data actually changed to prevent infinite re-renders on every window focus

@@ -6,7 +6,8 @@ import { TrendingUp, TrendingDown, Target, Wallet, DollarSign, Calendar, Calcula
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { es, enUS } from "date-fns/locale";
+import { useLanguage } from "@/context/LanguageContext";
 
 const formatCurrency = (val: number) => {
   return new Intl.NumberFormat('en-US', { 
@@ -17,6 +18,7 @@ const formatCurrency = (val: number) => {
 };
 
 const Stats = () => {
+  const { t, language } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [signals, setSignals] = useState<any[]>([]);
   const [bankroll, setBankroll] = useState<string>("10,000");
@@ -50,7 +52,6 @@ const Stats = () => {
 
         const chronologicalSignals = [...(signalsData || [])].reverse();
 
-        // Calculate based on flat 1 Unit staked per bet
         const enrichedSignals = chronologicalSignals.map((s) => {
           let realProfit = 0;
           let stakeUsed = 1;
@@ -75,13 +76,12 @@ const Stats = () => {
           };
         });
 
-        const totalResolved = won + lost; // exclude voided from win rate math usually, or include them as just 0. Here we exclude voided from win rate.
+        const totalResolved = won + lost;
         const winRate = totalResolved > 0 ? (won / totalResolved) * 100 : 0;
-        // Since 1 Unit = 10% of Bankroll, 1 Profit Unit = 10% ROI
         const roi = profitUnits * 10;
 
         setMetrics({
-          totalResolved: totalResolved + voided, // true total
+          totalResolved: totalResolved + voided,
           won,
           lost,
           voided,
@@ -102,7 +102,6 @@ const Stats = () => {
   }, []);
 
   const handleBankrollChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Extraer solo los números
     const rawValue = e.target.value.replace(/\D/g, '');
     if (!rawValue) {
       setBankroll("0");
@@ -116,18 +115,18 @@ const Stats = () => {
   const unitValue = numBankroll / 10;
   const simulatedProfit = metrics.profitUnits * unitValue;
 
+  const dateLocale = language === 'es' ? es : enUS;
+
   const chartData = useMemo(() => {
     if (!signals.length) return [];
     
-    // Sort signals chronologically
     const sortedSignals = [...signals].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
     
-    // Group signals by day
     const dailyData: Record<string, number> = {};
     
     sortedSignals.forEach(s => {
       const date = new Date(s.created_at);
-      const dateStr = format(date, "d MMM", { locale: es });
+      const dateStr = format(date, "d MMM", { locale: dateLocale });
       
       if (!dailyData[dateStr]) {
         dailyData[dateStr] = 0;
@@ -136,25 +135,24 @@ const Stats = () => {
       dailyData[dateStr] += (s.realProfit || 0);
     });
 
-    let currentProfit = 10; // Starting baseline
+    let currentProfit = 10;
     
     const chart = Object.keys(dailyData).map((date, index) => {
       const dayProfit = dailyData[date];
       currentProfit += dayProfit;
       return {
-        name: `Día ${index + 1}`,
+        name: `${t.dashboard.stats.day} ${index + 1}`,
         date,
         profit: Number(currentProfit.toFixed(2)),
         dayProfit: Number(dayProfit.toFixed(2))
       };
     });
 
-    // Insert day 0 to show the starting point
     return [
-      { name: 'Inicio', date: '10 feb', profit: 10, dayProfit: 0 },
+      { name: t.dashboard.stats.start, date: '10 feb', profit: 10, dayProfit: 0 },
       ...chart
     ];
-  }, [signals]);
+  }, [signals, dateLocale, t]);
 
 
 
@@ -167,18 +165,18 @@ const Stats = () => {
         className="flex items-center justify-between"
       >
         <div>
-          <h1 className="font-display text-2xl font-bold">Estadísticas</h1>
-          <p className="text-muted-foreground">Rendimiento basado en señales seguidas</p>
+          <h1 className="font-display text-2xl font-bold">{t.dashboard.stats.title}</h1>
+          <p className="text-muted-foreground">{t.dashboard.stats.subtitle}</p>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 bg-secondary rounded-lg">
           <Calendar className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium">Últimos 30 días</span>
+          <span className="text-sm font-medium">{t.dashboard.stats.last_30}</span>
         </div>
       </motion.div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {/* Unidades Ganadas */}
+        {/* Net Profit */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -186,7 +184,7 @@ const Stats = () => {
           className="bg-card border border-border rounded-xl p-5"
         >
           <div className="flex items-center justify-between mb-3">
-            <span className="text-sm text-muted-foreground">Profit Neto (Unidades)</span>
+            <span className="text-sm text-muted-foreground">{t.dashboard.stats.net_profit}</span>
             <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
               <Wallet className="h-4 w-4 text-primary" />
             </div>
@@ -198,10 +196,10 @@ const Stats = () => {
               </span>
             }
           </div>
-          <div className="text-sm text-muted-foreground">Utilidad histórica</div>
+          <div className="text-sm text-muted-foreground">{t.dashboard.stats.historical}</div>
         </motion.div>
 
-        {/* Apuestas Ganadas */}
+        {/* Bets Won */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -209,7 +207,7 @@ const Stats = () => {
           className="bg-card border border-border rounded-xl p-5"
         >
           <div className="flex items-center justify-between mb-3">
-            <span className="text-sm text-muted-foreground">Apuestas Ganadas</span>
+            <span className="text-sm text-muted-foreground">{t.dashboard.stats.bets_won}</span>
             <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
               <Target className="h-4 w-4 text-primary" />
             </div>
@@ -217,10 +215,10 @@ const Stats = () => {
           <div className="font-mono text-2xl md:text-3xl font-bold mb-1">
              {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : metrics.won}
           </div>
-          <div className="text-sm text-muted-foreground">de {metrics.totalResolved} totales</div>
+          <div className="text-sm text-muted-foreground">{t.dashboard.stats.of_total.replace('{total}', String(metrics.totalResolved))}</div>
         </motion.div>
 
-        {/* Tasa de Acierto */}
+        {/* Win Rate */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -228,7 +226,7 @@ const Stats = () => {
           className="bg-card border border-border rounded-xl p-5"
         >
           <div className="flex items-center justify-between mb-3">
-            <span className="text-sm text-muted-foreground">Tasa de Acierto</span>
+            <span className="text-sm text-muted-foreground">{t.dashboard.stats.win_rate}</span>
             <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
               <TrendingUp className="h-4 w-4 text-primary" />
             </div>
@@ -237,7 +235,7 @@ const Stats = () => {
             {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : `${metrics.winRate.toFixed(1)}%`}
           </div>
           <div className="flex items-center gap-1 text-sm text-primary">
-             <span>Resultados cerrados</span>
+             <span>{t.dashboard.stats.closed_results}</span>
           </div>
         </motion.div>
 
@@ -249,7 +247,7 @@ const Stats = () => {
           className="bg-card border border-border rounded-xl p-5"
         >
           <div className="flex items-center justify-between mb-3">
-            <span className="text-sm text-muted-foreground">ROI Total</span>
+            <span className="text-sm text-muted-foreground">{t.dashboard.stats.total_roi}</span>
             <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
               <DollarSign className="h-4 w-4 text-primary" />
             </div>
@@ -261,7 +259,7 @@ const Stats = () => {
                 </span>
              }
           </div>
-          <div className="text-sm text-muted-foreground">Retorno de Inversión</div>
+          <div className="text-sm text-muted-foreground">{t.dashboard.stats.roi_label}</div>
         </motion.div>
 
       </div>
@@ -275,8 +273,8 @@ const Stats = () => {
           className="bg-card border border-border rounded-xl p-6 lg:col-span-2"
         >
         <div className="flex items-center justify-between mb-6">
-          <h2 className="font-display text-lg font-bold">Evolución de Unidades (Growth)</h2>
-          <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-md">Profit Acumulado</span>
+          <h2 className="font-display text-lg font-bold">{t.dashboard.stats.chart_title}</h2>
+          <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-md">{t.dashboard.stats.accumulated}</span>
         </div>
         
         <div className="h-[300px] w-full">
@@ -286,7 +284,7 @@ const Stats = () => {
             </div>
           ) : signals.length === 0 ? (
             <div className="h-full flex items-center justify-center text-muted-foreground">
-              Aún no hay señales para graficar.
+              {t.dashboard.stats.no_chart_data}
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
@@ -318,7 +316,7 @@ const Stats = () => {
                   contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)', borderRadius: '8px' }}
                   itemStyle={{ color: 'var(--foreground)', fontWeight: 'bold' }}
                   labelStyle={{ color: 'var(--muted-foreground)' }}
-                  formatter={(value: number) => [`${value} U`, 'Unidades Acumuladas']}
+                  formatter={(value: number) => [`${value} U`, t.dashboard.stats.tooltip_units]}
                 />
                 <Area 
                   type="linear" 
@@ -334,7 +332,7 @@ const Stats = () => {
         </div>
       </motion.div>
 
-      {/* Earnings Simulator - Compact Card Moved Next to Chart */}
+      {/* Earnings Simulator */}
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -343,7 +341,7 @@ const Stats = () => {
       >
         <div>
           <div className="flex items-center justify-between mb-6">
-            <span className="text-lg font-bold text-primary font-display">Simular Capital</span>
+            <span className="text-lg font-bold text-primary font-display">{t.dashboard.stats.simulate}</span>
             <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center border border-primary/20">
               <Calculator className="h-5 w-5 text-primary" />
             </div>
@@ -351,7 +349,7 @@ const Stats = () => {
           
           <div className="space-y-4">
              <div className="space-y-2">
-                <label className="text-sm text-foreground/80 font-medium ml-1">Tu Bankroll Total</label>
+                <label className="text-sm text-foreground/80 font-medium ml-1">{t.dashboard.stats.your_bankroll}</label>
                 <div className="flex items-center gap-2 relative">
                   <span className="absolute left-3 text-muted-foreground font-medium">$</span>
                   <Input 
@@ -364,14 +362,14 @@ const Stats = () => {
              </div>
              
              <div className="bg-background/50 rounded-lg p-3 border border-border flex justify-between items-center outline outline-1 outline-transparent hover:outline-primary/20 transition-all">
-                <span className="text-sm text-muted-foreground">Valor de 1 Unidad (10%)</span>
+                <span className="text-sm text-muted-foreground">{t.dashboard.stats.unit_value}</span>
                 <span className="font-mono text-sm font-bold text-foreground/90">${formatCurrency(numBankroll / 10)}</span>
              </div>
           </div>
         </div>
         
         <div className="mt-8 pt-6 border-t border-primary/10">
-          <div className="text-sm text-muted-foreground mb-2 font-medium">Ganancia Proyectada Histórica</div>
+          <div className="text-sm text-muted-foreground mb-2 font-medium">{t.dashboard.stats.projected_profit}</div>
           <div className={cn(
             "font-mono text-4xl w-full text-center overflow-x-auto custom-scrollbar font-black drop-shadow-sm pb-2",
             simulatedProfit > 0 ? "text-green-500" : simulatedProfit < 0 ? "text-red-500" : ""
@@ -390,8 +388,8 @@ const Stats = () => {
         className="bg-card border border-border rounded-xl overflow-hidden"
       >
         <div className="px-6 py-4 border-b border-border flex justify-between items-center">
-          <h2 className="font-display text-lg font-bold">Historial de Señales Cerradas</h2>
-          <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-md">Ordenadas por fecha reciente</span>
+          <h2 className="font-display text-lg font-bold">{t.dashboard.stats.history_title}</h2>
+          <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-md">{t.dashboard.stats.history_sorted}</span>
         </div>
         
         {loading ? (
@@ -400,12 +398,12 @@ const Stats = () => {
           </div>
         ) : signals.length === 0 ? (
           <div className="p-8 text-center text-muted-foreground">
-            Aún no hay señales finalizadas en el historial.
+            {t.dashboard.stats.no_history}
           </div>
         ) : (
           <div className="divide-y divide-border max-h-[500px] overflow-y-auto custom-scrollbar">
             {signals.map((signal) => {
-               const dateStr = new Date(signal.created_at).toLocaleDateString("es-ES", { month: "short", day: "numeric" });
+               const dateStr = new Date(signal.created_at).toLocaleDateString(language === 'es' ? "es-ES" : "en-US", { month: "short", day: "numeric" });
                const isWon = signal.status === "won";
                const isLost = signal.status === "lost";
                const isVoid = signal.status === "void";
@@ -440,7 +438,7 @@ const Stats = () => {
                         "bg-yellow-500/10 text-yellow-500 border-yellow-500/20"
                       )}
                     >
-                      {isWon ? "GANADA" : isLost ? "PERDIDA" : "NULA"}
+                      {isWon ? t.dashboard.stats.won : isLost ? t.dashboard.stats.lost : t.dashboard.stats.void}
                     </span>
                     <span
                       className={cn(

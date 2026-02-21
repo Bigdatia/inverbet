@@ -16,26 +16,28 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-
-const platformItems = [
-  { icon: Radar, label: "Scanner", path: "/admin/scanner" },
-  { icon: GraduationCap, label: "Academy", path: "/admin/academy" },
-  { icon: BarChart3, label: "Estadísticas", path: "/admin/stats" },
-  { icon: UserIcon, label: "Perfil", path: "/admin/profile" },
-];
-
-const adminItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
-  { icon: Radar, label: "Gestión Scanner", path: "/admin/scanner-management" },
-  { icon: Users, label: "Usuarios", path: "/admin/users" },
-  { icon: FileText, label: "Registros", path: "/admin/registrations" },
-];
+import { useLanguage } from "@/context/LanguageContext";
 
 const AdminLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { profile, user, signOut } = useAuth();
+  const { t } = useLanguage();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const platformItems = [
+    { icon: Radar, label: t.dashboard.admin.layout.platform_items.scanner, path: "/admin/scanner" },
+    { icon: GraduationCap, label: t.dashboard.admin.layout.platform_items.academy, path: "/admin/academy" },
+    { icon: BarChart3, label: t.dashboard.admin.layout.platform_items.stats, path: "/admin/stats" },
+    { icon: UserIcon, label: t.dashboard.admin.layout.platform_items.profile, path: "/admin/profile" },
+  ];
+
+  const adminItems = [
+    { icon: LayoutDashboard, label: t.dashboard.admin.layout.admin_items.dashboard, path: "/admin" },
+    { icon: Radar, label: t.dashboard.admin.layout.admin_items.scanner_mgmt, path: "/admin/scanner-management" },
+    { icon: Users, label: t.dashboard.admin.layout.admin_items.users, path: "/admin/users" },
+    { icon: FileText, label: t.dashboard.admin.layout.admin_items.registrations, path: "/admin/registrations" },
+  ];
 
   const fullName = profile?.full_name || user?.user_metadata?.full_name;
   const userName = fullName ? fullName.split(" ")[0] : (user?.email?.split("@")[0] || "Admin");
@@ -80,7 +82,7 @@ const AdminLayout = () => {
           {/* Platform Section */}
           <div className="space-y-2">
             <h3 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Plataforma
+              {t.dashboard.admin.layout.platform}
             </h3>
             <div className="space-y-1">
               {platformItems.map((item) => (
@@ -92,7 +94,7 @@ const AdminLayout = () => {
           {/* Administration Section */}
           <div className="space-y-2">
             <h3 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Administración
+              {t.dashboard.admin.layout.administration}
             </h3>
             <div className="space-y-1">
               {adminItems.map((item) => (
@@ -109,7 +111,7 @@ const AdminLayout = () => {
             onClick={handleLogout}
           >
             <LogOut className="h-4 w-4" />
-            Cerrar Sesión
+            {t.dashboard.admin.layout.logout}
           </Button>
         </div>
       </aside>
@@ -148,7 +150,7 @@ const AdminLayout = () => {
           {/* Platform Section */}
           <div className="space-y-2">
             <h3 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Plataforma
+              {t.dashboard.admin.layout.platform}
             </h3>
             <div className="space-y-1">
               {platformItems.map((item) => (
@@ -160,7 +162,7 @@ const AdminLayout = () => {
           {/* Administration Section */}
           <div className="space-y-2">
             <h3 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Administración
+              {t.dashboard.admin.layout.administration}
             </h3>
             <div className="space-y-1">
               {adminItems.map((item) => (
@@ -175,7 +177,7 @@ const AdminLayout = () => {
           className="mt-8 flex items-center gap-3 px-3 py-3 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
         >
           <LogOut className="h-5 w-5" />
-          <span className="font-medium">Cerrar Sesión</span>
+          <span className="font-medium">{t.dashboard.admin.layout.logout}</span>
         </button>
       </motion.aside>
 
@@ -192,7 +194,7 @@ const AdminLayout = () => {
                 <Menu className="h-5 w-5" />
               </button>
               <h1 className="font-display text-lg md:text-xl font-bold text-white">
-                Bienvenido, <span className="capitalize">{userName}</span>
+                {t.dashboard.admin.layout.welcome} <span className="capitalize">{userName}</span>
               </h1>
             </div>
             
@@ -201,7 +203,7 @@ const AdminLayout = () => {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
               </span>
-              <span className="text-sm font-medium text-primary">Admin Mode</span>
+              <span className="text-sm font-medium text-primary">{t.dashboard.admin.layout.admin_mode}</span>
             </div>
           </div>
         </header>

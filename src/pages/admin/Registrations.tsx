@@ -12,11 +12,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Check, X, ExternalLink } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 const Registrations = () => {
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { t, language } = useLanguage();
 
   const fetchRegistrations = async () => {
     try {
@@ -29,7 +31,7 @@ const Registrations = () => {
       setRegistrations(data || []);
     } catch (error: any) {
       toast({
-        title: "Error al cargar registros",
+        title: t.dashboard.admin.registrations.error_load,
         description: error.message,
         variant: "destructive",
       });
@@ -52,11 +54,9 @@ const Registrations = () => {
       if (error) throw error;
 
       if (newStatus === 'approved') {
-        // Logic to activate user subscription would go here
-        // For now we just update the registration status
         toast({
-          title: "Registro Aprobado",
-          description: `El usuario ${email} ha sido aprobado. Recuerda activar su suscripción en Usuarios.`,
+          title: t.dashboard.admin.registrations.approved_title,
+          description: t.dashboard.admin.registrations.approved_desc.replace('{email}', email),
         });
       }
 
@@ -75,25 +75,25 @@ const Registrations = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-display font-bold">Registros de Pago Manual</h1>
+      <h1 className="text-3xl font-display font-bold">{t.dashboard.admin.registrations.title}</h1>
 
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Fecha</TableHead>
-              <TableHead>Nombre</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Método</TableHead>
-              <TableHead>Comprobante</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead>Acciones</TableHead>
+              <TableHead>{t.dashboard.admin.registrations.cols.date}</TableHead>
+              <TableHead>{t.dashboard.admin.registrations.cols.name}</TableHead>
+              <TableHead>{t.dashboard.admin.registrations.cols.email}</TableHead>
+              <TableHead>{t.dashboard.admin.registrations.cols.method}</TableHead>
+              <TableHead>{t.dashboard.admin.registrations.cols.proof}</TableHead>
+              <TableHead>{t.dashboard.admin.registrations.cols.status}</TableHead>
+              <TableHead>{t.dashboard.admin.registrations.cols.actions}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {registrations.map((reg: any) => (
               <TableRow key={reg.id}>
-                <TableCell>{new Date(reg.created_at).toLocaleDateString()}</TableCell>
+                <TableCell>{new Date(reg.created_at).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US')}</TableCell>
                 <TableCell>{reg.full_name}</TableCell>
                 <TableCell>{reg.email}</TableCell>
                 <TableCell className="capitalize">{reg.payment_method}</TableCell>
@@ -105,7 +105,7 @@ const Registrations = () => {
                       rel="noopener noreferrer"
                       className="flex items-center gap-1 text-primary hover:underline"
                     >
-                      Ver <ExternalLink className="h-3 w-3" />
+                      {t.dashboard.admin.registrations.view} <ExternalLink className="h-3 w-3" />
                     </a>
                   )}
                 </TableCell>

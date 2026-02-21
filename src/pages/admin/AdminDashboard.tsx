@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, CreditCard, Activity, Loader2, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/context/LanguageContext";
 
 const AdminDashboard = () => {
+  const { t } = useLanguage();
   const [stats, setStats] = useState({
     totalUsers: 0,
     activePro: 0,
@@ -15,7 +17,6 @@ const AdminDashboard = () => {
     const fetchStats = async () => {
       try {
         setLoading(true);
-        // GET ALL NON-ADMIN USERS
         const { data: users, error } = await supabase
           .from("profiles")
           .select("*")
@@ -37,7 +38,6 @@ const AdminDashboard = () => {
                const endDate = new Date(user.subscription_end_date).getTime();
                const diff = endDate - now;
                
-               // expiring in 3 or fewer days, but hasn't fully expired strictly past 0 days yet
                if (diff >= 0 && diff <= threeDaysMs) {
                  expiringSoon++;
                }
@@ -63,45 +63,45 @@ const AdminDashboard = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-display font-bold">Panel de Administración</h1>
+      <h1 className="text-3xl font-display font-bold">{t.dashboard.admin.dashboard.title}</h1>
       
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Usuarios Totales</CardTitle>
+            <CardTitle className="text-sm font-medium">{t.dashboard.admin.dashboard.total_users}</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {loading ? <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /> : stats.totalUsers}
             </div>
-            <p className="text-xs text-muted-foreground">Usuarios registrados (sin admins)</p>
+            <p className="text-xs text-muted-foreground">{t.dashboard.admin.dashboard.total_users_desc}</p>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Suscripciones Activas</CardTitle>
+            <CardTitle className="text-sm font-medium">{t.dashboard.admin.dashboard.active_subs}</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-500">
                {loading ? <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /> : stats.activePro}
             </div>
-            <p className="text-xs text-muted-foreground">Usuarios con acceso Pro</p>
+            <p className="text-xs text-muted-foreground">{t.dashboard.admin.dashboard.active_subs_desc}</p>
           </CardContent>
         </Card>
         
         <Card className={stats.expiringSoon > 0 ? "border-red-500/50 bg-red-500/5" : ""}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className={`text-sm font-medium ${stats.expiringSoon > 0 ? 'text-red-500' : ''}`}>Suscripciones a Vencer</CardTitle>
+            <CardTitle className={`text-sm font-medium ${stats.expiringSoon > 0 ? 'text-red-500' : ''}`}>{t.dashboard.admin.dashboard.expiring_subs}</CardTitle>
             <AlertCircle className={`h-4 w-4 ${stats.expiringSoon > 0 ? 'text-red-500' : 'text-muted-foreground'}`} />
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold ${stats.expiringSoon > 0 ? 'text-red-500' : ''}`}>
                {loading ? <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /> : stats.expiringSoon}
             </div>
-            <p className="text-xs text-muted-foreground">En los próximos 3 días</p>
+            <p className="text-xs text-muted-foreground">{t.dashboard.admin.dashboard.expiring_subs_desc}</p>
           </CardContent>
         </Card>
       </div>

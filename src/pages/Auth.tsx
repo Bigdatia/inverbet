@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,51 +10,30 @@ import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Mail, Lock, ArrowLeft, Loader2 } from "lucide-react";
 import { z } from "zod";
 import { useLanguage } from "@/context/LanguageContext";
+import LanguageToggle from "@/components/LanguageToggle";
+import { useSearchParams } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
 
 const emailSchema = z.string().email();
 const passwordSchema = z.string().min(6);
 
 const Auth = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const [searchParams] = useSearchParams();
+  const initialMode = searchParams.get("mode") === "signup";
+  const [isLogin, setIsLogin] = useState(!initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [acceptedAge, setAcceptedAge] = useState(false);
   const [termsError, setTermsError] = useState(false);
+  const [ageError, setAgeError] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; fullName?: string }>({});
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useLanguage();
-
-  useEffect(() => {
-    // Forzar limpieza total de la sesión al entrar a la página de login
-    // para evitar cualquier estado corrupto y recargar la página una vez
-    // para restaurar el cliente de Supabase.
-    const forceCleanup = async () => {
-      const hasCleanedUp = sessionStorage.getItem('auth_cleaned_up');
-      
-      if (!hasCleanedUp) {
-        try {
-          Object.keys(localStorage).forEach(key => {
-            if (key.startsWith('sb-')) {
-              localStorage.removeItem(key);
-            }
-          });
-          // No hacemos un await aquí para que no se congele si la red está fallando
-          supabase.auth.signOut().catch(e => console.error(e));
-        } catch (error) {
-          console.error("Error clearing session:", error);
-        }
-        
-        sessionStorage.setItem('auth_cleaned_up', 'true');
-        window.location.reload();
-      }
-    };
-
-    forceCleanup();
-  }, []);
 
   const validate = () => {
     const newErrors: { email?: string; password?: string; fullName?: string } = {};
@@ -74,7 +53,7 @@ const Auth = () => {
     }
 
     if (!isLogin && !isResetMode && !fullName.trim()) {
-      newErrors.fullName = "El nombre completo es requerido";
+      newErrors.fullName = t.auth.errors.name_required;
     }
     
     setErrors(newErrors);
@@ -88,11 +67,25 @@ const Auth = () => {
     
     if (!validate()) return;
     
-    // Validate terms acceptance for signup
-    if (!isLogin && !acceptedTerms && !isResetMode) {
-      setTermsError(true);
-      setTimeout(() => setTermsError(false), 2000);
-      return;
+    // BOTH checkboxes are mandatory for registration
+    if (!isLogin && !isResetMode) {
+      let hasError = false;
+      if (!acceptedTerms) {
+        setTermsError(true);
+        hasError = true;
+      }
+      if (!acceptedAge) {
+        setAgeError(true);
+        hasError = true;
+      }
+      
+      if (hasError) {
+        setTimeout(() => {
+          setTermsError(false);
+          setAgeError(false);
+        }, 2000);
+        return;
+      }
     }
     
     setLoading(true);
@@ -106,8 +99,8 @@ const Auth = () => {
         if (error) throw error;
 
         toast({
-          title: "Correo enviado",
-          description: "Revisa tu bandeja de entrada para restablecer tu contraseña.",
+          title: t.auth.errors.reset_email_sent,
+          description: t.auth.errors.reset_email_desc,
         });
         setIsResetMode(false);
         setIsLogin(true);
@@ -119,7 +112,7 @@ const Auth = () => {
         });
         
         const timeoutPromise = new Promise<{ data: { user: null; session: null }; error: any }>((_, reject) => 
-          setTimeout(() => reject(new Error("Timeout: El servidor no responde")), 10000)
+          setTimeout(() => reject(new Error("Timeout")), 15000)
         );
 
         const { error } = await Promise.race([signInPromise, timeoutPromise]);
@@ -169,25 +162,10 @@ const Auth = () => {
       } else if (errorMessage.includes("already registered")) {
         errorMessage = t.auth.errors.existing_user_desc;
       } else if (errorMessage.includes("Timeout")) {
-        // Known issue: Local storage lock corrupted
-        errorMessage = "Error de conexión o caché corrupta. Limpiando sesión y reiniciando...";
-        try {
-          Object.keys(localStorage).forEach(key => {
-            if (key.startsWith('sb-')) {
-              localStorage.removeItem(key);
-            }
-          });
-        } catch(e) {}
-        
         toast({
-          title: "Recuperando sesión",
-          description: errorMessage,
+          title: t.auth.errors.timeout_error,
+          description: t.auth.errors.timeout_desc,
         });
-        
-        setTimeout(() => {
-          sessionStorage.removeItem('auth_cleaned_up');
-          window.location.reload();
-        }, 1500);
         
         setLoading(false);
         return;
@@ -213,16 +191,25 @@ const Auth = () => {
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
       </div>
 
-      {/* Back button */}
-      <motion.button
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        onClick={() => navigate("/")}
-        className="absolute top-6 left-6 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <ArrowLeft className="h-5 w-5" />
-        <span className="font-medium">{t.auth.back_btn}</span>
-      </motion.button>
+      {/* Header Bar */}
+      <div className="absolute top-6 left-6 right-6 flex items-center justify-between z-20">
+        <motion.button
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          onClick={() => navigate("/")}
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="h-5 w-5" />
+          <span className="font-medium">{t.auth.back_btn}</span>
+        </motion.button>
+        
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+        >
+          <LanguageToggle className="border border-border/50 rounded-full bg-card/50 backdrop-blur-md hover:bg-card/80 transition-all shadow-lg" />
+        </motion.div>
+      </div>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -240,14 +227,14 @@ const Auth = () => {
           <div className="text-center mb-8">
             <h1 className="font-display text-2xl font-bold mb-2">
               {isResetMode 
-                ? "Recuperar Contraseña" 
+                ? t.auth.reset_password_title 
                 : isLogin 
                   ? t.auth.welcome_back 
                   : t.auth.create_account}
             </h1>
             <p className="text-muted-foreground">
               {isResetMode
-                ? "Ingresa tu email para recibir un enlace de recuperación."
+                ? t.auth.reset_password_subtitle
                 : isLogin
                   ? t.auth.login_subtitle
                   : t.auth.register_subtitle}
@@ -258,7 +245,7 @@ const Auth = () => {
             {!isLogin && !isResetMode && (
               <div className="space-y-2">
                 <Label htmlFor="fullName" className="text-sm font-medium">
-                  Nombre Completo
+                  {t.auth.full_name_label}
                 </Label>
                 <div className="relative">
                   <Input
@@ -266,7 +253,7 @@ const Auth = () => {
                     type="text"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Juan Pérez"
+                    placeholder={t.auth.full_name_placeholder}
                     className="h-12 bg-secondary border-border focus:border-primary"
                   />
                 </div>
@@ -331,44 +318,68 @@ const Auth = () => {
               </div>
             )}
 
-            {/* Terms checkbox - only show on signup */}
+            {/* Terms and Age checkboxes - only show on signup */}
             {!isLogin && (
-              <div className="flex items-start gap-3">
-                <Checkbox
-                  id="terms"
-                  checked={acceptedTerms}
-                  onCheckedChange={(checked) => {
-                    setAcceptedTerms(checked === true);
-                    setTermsError(false);
-                  }}
-                  className="mt-0.5 border-muted-foreground/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                />
-                <label
-                  htmlFor="terms"
-                  className={`text-xs leading-relaxed transition-colors duration-300 ${
-                    termsError 
-                      ? "text-destructive animate-pulse" 
-                      : "text-muted-foreground"
-                  }`}
-                >
-                  {t.auth.terms_accept}{" "}
-                  <Link 
-                    to="/terms" 
-                    className="text-primary hover:underline"
-                    onClick={(e) => e.stopPropagation()}
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    id="terms"
+                    checked={acceptedTerms}
+                    onCheckedChange={(checked) => {
+                      setAcceptedTerms(checked === true);
+                      setTermsError(false);
+                    }}
+                    className="mt-0.5 border-muted-foreground/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                  />
+                  <label
+                    htmlFor="terms"
+                    className={`text-xs leading-relaxed transition-colors duration-300 ${
+                      termsError 
+                        ? "text-destructive font-bold animate-pulse" 
+                        : "text-muted-foreground"
+                    }`}
                   >
-                    {t.auth.terms_link}
-                  </Link>{" "}
-                  y la{" "}
-                  <Link 
-                    to="/privacy" 
-                    className="text-primary hover:underline"
-                    onClick={(e) => e.stopPropagation()}
+                    {t.auth.terms_accept}{" "}
+                    <Link 
+                      to="/terms" 
+                      className="text-primary hover:underline"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {t.auth.terms_link}
+                    </Link>{" "}
+                    {t.navbar.subscribe.includes('Subscribe') ? 'and the' : 'y la'}{" "}
+                    <Link 
+                      to="/privacy" 
+                      className="text-primary hover:underline"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {t.auth.privacy_link}
+                    </Link>
+                    .
+                  </label>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    id="age"
+                    checked={acceptedAge}
+                    onCheckedChange={(checked) => {
+                      setAcceptedAge(checked === true);
+                      setAgeError(false);
+                    }}
+                    className="mt-0.5 border-muted-foreground/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                  />
+                  <label
+                    htmlFor="age"
+                    className={`text-xs leading-relaxed transition-colors duration-300 ${
+                      ageError 
+                        ? "text-destructive font-bold animate-pulse" 
+                        : "text-muted-foreground"
+                    }`}
                   >
-                    {t.auth.privacy_link}
-                  </Link>
-                  .
-                </label>
+                    {t.auth.age_verification}
+                  </label>
+                </div>
               </div>
             )}
 
@@ -380,7 +391,7 @@ const Auth = () => {
               {loading ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
               ) : isResetMode ? (
-                "Enviar correo de recuperación"
+                t.auth.send_recovery_btn
               ) : isLogin ? (
                 t.auth.login_btn
               ) : (
@@ -399,7 +410,7 @@ const Auth = () => {
                    }}
                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
                  >
-                   ¿Olvidaste tu contraseña?
+                   {t.auth.forgot_password}
                  </button>
               </div>
             )}
@@ -409,7 +420,7 @@ const Auth = () => {
             <p className="text-muted-foreground">
               {isResetMode ? (
                 <>
-                  ¿Ya recordaste tu contraseña?{" "}
+                  {t.auth.remembered_password}{" "}
                   <button
                     type="button"
                     onClick={() => {
@@ -419,7 +430,7 @@ const Auth = () => {
                     }}
                     className="text-primary hover:underline font-medium"
                   >
-                    Volver al login
+                    {t.auth.back_to_login}
                   </button>
                 </>
               ) : (
@@ -431,7 +442,9 @@ const Auth = () => {
                       setIsLogin(!isLogin);
                       setErrors({});
                       setAcceptedTerms(false);
+                      setAcceptedAge(false);
                       setTermsError(false);
+                      setAgeError(false);
                     }}
                     className="text-primary hover:underline font-medium"
                   >
@@ -446,13 +459,13 @@ const Auth = () => {
         {/* Footer */}
         <p className="text-center text-xs text-muted-foreground mt-6">
           {t.auth.terms_continue}{" "}
-          <a href="#" className="underline hover:text-foreground">
+          <Link to="/terms" className="underline hover:text-foreground">
             {t.auth.terms_link}
-          </a>{" "}
-          y{" "}
-          <a href="#" className="underline hover:text-foreground">
+          </Link>{" "}
+          {t.navbar.subscribe.includes('Subscribe') ? 'and' : 'y'}{" "}
+          <Link to="/privacy" className="underline hover:text-foreground">
             {t.auth.privacy_link}
-          </a>
+          </Link>
         </p>
       </motion.div>
     </div>

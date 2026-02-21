@@ -7,10 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/context/LanguageContext";
 
 const Profile = () => {
   const [user, setUser] = useState<any>(null);
-
+  const { t, language } = useLanguage();
   const { toast } = useToast();
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [passwords, setPasswords] = useState({
@@ -46,7 +47,7 @@ const Profile = () => {
     if (!passwords.current || !passwords.new || !passwords.confirm) {
         toast({
             title: "Error",
-            description: "Por favor completa todos los campos",
+            description: t.dashboard.profile.error_fill_fields,
             variant: "destructive"
         });
         return;
@@ -55,7 +56,7 @@ const Profile = () => {
     if (passwords.new !== passwords.confirm) {
         toast({
             title: "Error",
-            description: "Las contraseñas nuevas no coinciden",
+            description: t.dashboard.profile.error_mismatch,
             variant: "destructive"
         });
         return;
@@ -64,7 +65,7 @@ const Profile = () => {
     if (passwords.new.length < 6) {
         toast({
             title: "Error",
-            description: "La contraseña debe tener al menos 6 caracteres",
+            description: t.dashboard.profile.error_min_length,
             variant: "destructive"
         });
         return;
@@ -73,17 +74,15 @@ const Profile = () => {
     setLoading(true);
 
     try {
-        // 1. Verify current password by signing in (re-auth)
         const { error: signInError } = await supabase.auth.signInWithPassword({
             email: user.email,
             password: passwords.current
         });
 
         if (signInError) {
-            throw new Error("La contraseña actual es incorrecta");
+            throw new Error(t.dashboard.profile.error_wrong_current);
         }
 
-        // 2. Update password
         const { error: updateError } = await supabase.auth.updateUser({
             password: passwords.new
         });
@@ -91,8 +90,8 @@ const Profile = () => {
         if (updateError) throw updateError;
 
         toast({
-            title: "Éxito",
-            description: "Contraseña actualizada correctamente",
+            title: t.dashboard.profile.success_title,
+            description: t.dashboard.profile.success_password,
         });
 
         setPasswords({ current: "", new: "", confirm: "" });
@@ -101,7 +100,7 @@ const Profile = () => {
     } catch (error: any) {
         toast({
             title: "Error",
-            description: error.message || "Error al actualizar la contraseña",
+            description: error.message || t.dashboard.profile.error_update,
             variant: "destructive"
         });
     } finally {
@@ -110,7 +109,7 @@ const Profile = () => {
   };
 
   const memberSince = user?.created_at
-    ? new Date(user.created_at).toLocaleDateString("es-ES", {
+    ? new Date(user.created_at).toLocaleDateString(language === 'es' ? "es-ES" : "en-US", {
         year: "numeric",
         month: "long",
       })
@@ -120,7 +119,7 @@ const Profile = () => {
     if (!startDateStr) return null;
     const date = new Date(startDateStr);
     date.setMonth(date.getMonth() + 1);
-    return date.toLocaleDateString("es-ES", {
+    return date.toLocaleDateString(language === 'es' ? "es-ES" : "en-US", {
       year: "numeric",
       month: "short",
       day: "numeric"
@@ -130,17 +129,15 @@ const Profile = () => {
   const handleSignOutAll = async () => {
     try {
         setLoading(true);
-        // Deslogea en todos los dispositivos si `scope: global` es soportado.
         const { error } = await supabase.auth.signOut({ scope: 'global' });
         if (error) throw error;
         toast({
-            title: "Sesiones cerradas",
-            description: "Se han cerrado todas las sesiones.",
+            title: t.dashboard.profile.sessions_closed,
+            description: t.dashboard.profile.sessions_closed_desc,
         });
         window.location.href = '/auth';
     } catch (error: any) {
         console.error(error);
-        // Fallback preventivo
         await supabase.auth.signOut();
         window.location.href = '/auth';
     } finally {
@@ -155,8 +152,8 @@ const Profile = () => {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <h1 className="font-display text-2xl font-bold">Perfil y Pagos</h1>
-        <p className="text-muted-foreground">Gestiona tu cuenta y suscripción</p>
+        <h1 className="font-display text-2xl font-bold">{t.dashboard.profile.title}</h1>
+        <p className="text-muted-foreground">{t.dashboard.profile.subtitle}</p>
       </motion.div>
 
       {/* Profile Card */}
@@ -172,14 +169,14 @@ const Profile = () => {
           </div>
           <div className="flex-1">
             <h2 className="font-display text-xl font-bold capitalize">
-              {user?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Usuario"}
+              {user?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || t.dashboard.user_fallback}
             </h2>
             <div className="flex items-center gap-2 text-muted-foreground mt-1">
               <Mail className="h-4 w-4" />
               <span className="text-sm">{user?.email}</span>
             </div>
             <p className="text-xs text-muted-foreground mt-2">
-              Miembro desde {memberSince}
+              {t.dashboard.profile.member_since} {memberSince}
             </p>
           </div>
         </div>
@@ -198,21 +195,16 @@ const Profile = () => {
             <Crown className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h3 className="font-display font-bold">Membresía PRO</h3>
-            <p className="text-sm text-muted-foreground">Plan activo</p>
+            <h3 className="font-display font-bold">{t.dashboard.profile.pro_membership}</h3>
+            <p className="text-sm text-muted-foreground">{t.dashboard.profile.plan_active}</p>
           </div>
           <span className="ml-auto px-3 py-1 bg-primary/20 text-primary text-sm font-medium rounded-full">
-            Activa
+            {t.dashboard.profile.active}
           </span>
         </div>
 
         <div className="space-y-3 mb-6">
-          {[
-            "Acceso ilimitado al Scanner 24/7",
-            "Inverbet Academy incluido",
-            "Alertas en tiempo real",
-            "Soporte prioritario",
-          ].map((benefit, index) => (
+          {t.dashboard.profile.benefits.map((benefit: string, index: number) => (
             <div key={index} className="flex items-center gap-3">
               <div className="w-5 h-5 bg-primary/20 rounded-full flex items-center justify-center">
                 <Check className="h-3 w-3 text-primary" />
@@ -224,8 +216,8 @@ const Profile = () => {
 
         <div className="flex items-center justify-between pt-4 border-t border-border">
           <div>
-            <span className="text-muted-foreground text-sm">Próximo cobro:</span>
-            <p className="font-mono font-bold">$20 USD - {getNextBillingDate(user?.subscription_start_date) || "No disponible"}</p>
+            <span className="text-muted-foreground text-sm">{t.dashboard.profile.next_billing}</span>
+            <p className="font-mono font-bold">$20 USD - {getNextBillingDate(user?.subscription_start_date) || t.dashboard.profile.not_available}</p>
           </div>
         </div>
       </motion.div>
@@ -241,26 +233,24 @@ const Profile = () => {
             <Crown className="h-5 w-5 text-muted-foreground" />
           </div>
           <div>
-            <h3 className="font-display font-bold">Plan Gratuito</h3>
-            <p className="text-sm text-muted-foreground">Acceso limitado</p>
+            <h3 className="font-display font-bold">{t.dashboard.profile.free_plan}</h3>
+            <p className="text-sm text-muted-foreground">{t.dashboard.profile.limited_access}</p>
           </div>
         </div>
         
         <div className="flex justify-between items-center pt-4 border-t border-border mt-4">
-            <p className="text-sm text-muted-foreground">Mejora tu plan para acceder a todas las funciones.</p>
+            <p className="text-sm text-muted-foreground">{t.dashboard.profile.upgrade_msg}</p>
             <Button 
                 onClick={() => {
                   window.location.href = '/';
                 }}
                 className="bg-primary text-primary-foreground hover:bg-primary/90 glow-green"
             >
-                Hazte Pro
+                {t.dashboard.profile.go_pro}
             </Button>
         </div>
       </motion.div>
       )}
-
-      {/* Payment Methods (Hidden) */}
 
       {/* Security */}
       <motion.div
@@ -271,7 +261,7 @@ const Profile = () => {
       >
         <div className="flex items-center gap-3 mb-4">
           <Shield className="h-5 w-5 text-primary" />
-          <h3 className="font-display font-bold">Seguridad</h3>
+          <h3 className="font-display font-bold">{t.dashboard.profile.security}</h3>
         </div>
         <div className="space-y-3">
         <div className="space-y-4">
@@ -281,7 +271,7 @@ const Profile = () => {
                 className="w-full justify-start border-border"
                 onClick={() => setShowPasswordForm(true)}
               >
-                Cambiar contraseña
+                {t.dashboard.profile.change_password}
               </Button>
           ) : (
               <motion.div 
@@ -290,7 +280,7 @@ const Profile = () => {
                 className="space-y-4 pt-2"
               >
                   <div className="space-y-2">
-                      <Label htmlFor="current">Contraseña actual</Label>
+                      <Label htmlFor="current">{t.dashboard.profile.current_password}</Label>
                       <Input 
                         id="current" 
                         type="password" 
@@ -300,7 +290,7 @@ const Profile = () => {
                       />
                   </div>
                   <div className="space-y-2">
-                      <Label htmlFor="new">Nueva contraseña</Label>
+                      <Label htmlFor="new">{t.dashboard.profile.new_password}</Label>
                       <Input 
                         id="new" 
                         type="password" 
@@ -310,7 +300,7 @@ const Profile = () => {
                       />
                   </div>
                   <div className="space-y-2">
-                      <Label htmlFor="confirm">Confirmar nueva contraseña</Label>
+                      <Label htmlFor="confirm">{t.dashboard.profile.confirm_password}</Label>
                       <Input 
                         id="confirm" 
                         type="password" 
@@ -325,7 +315,7 @@ const Profile = () => {
                         disabled={loading}
                         className="bg-primary text-primary-foreground hover:bg-primary/90"
                       >
-                          {loading ? "Guardando..." : "Guardar cambios"}
+                          {loading ? t.dashboard.profile.saving : t.dashboard.profile.save_changes}
                       </Button>
                       <Button 
                         variant="ghost" 
@@ -335,7 +325,7 @@ const Profile = () => {
                         }}
                         disabled={loading}
                       >
-                          Cancelar
+                          {t.dashboard.profile.cancel}
                       </Button>
                   </div>
               </motion.div>
@@ -347,7 +337,7 @@ const Profile = () => {
             disabled={loading}
             className="w-full justify-start border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
           >
-            {loading ? "Cerrando sesiones..." : "Cerrar todas las sesiones"}
+            {loading ? t.dashboard.profile.closing_sessions : t.dashboard.profile.close_all_sessions}
           </Button>
         </div>
         </div>

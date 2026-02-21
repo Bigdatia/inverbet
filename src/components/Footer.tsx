@@ -32,9 +32,9 @@ const Footer = () => {
               <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
                 {t.footer.contact}
               </a>
-              <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+              <Link to="/faq" className="text-muted-foreground hover:text-foreground transition-colors">
                 {t.footer.faq}
-              </a>
+              </Link>
             </div>
           </div>
 
