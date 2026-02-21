@@ -151,7 +151,7 @@ export const translations = {
       contact: "Contacto",
       faq: "FAQ",
       rights: "Todos los derechos reservados.",
-      disclaimer: "Inverbet es una herramienta tecnológica de análisis estadístico. Los datos y señales proporcionados se basan en probabilidades históricas y no garantizan resultados futuros. El éxito pasado no es indicador de rendimientos venideros. Utilice esta información como apoyo educativo para una gestión de riesgo profesional. Contenido exclusivo para mayores de 18 años."
+      disclaimer: "Inverbet es una plataforma de análisis estadístico basada en IA, no un operador de apuestas. Nuestras señales son proyecciones probabilísticas. Úsalas con responsabilidad y criterio profesional. Solo para mayores de 18 años."
     },
     install: {
       button: "Instalar App",
@@ -314,7 +314,7 @@ export const translations = {
       contact: "Contact",
       faq: "FAQ",
       rights: "All rights reserved.",
-      disclaimer: "Inverbet is a technological tool for statistical analysis. Provided data and signals are based on historical probabilities and do not guarantee future results. Past success is not an indicator of future performance. Use this information as educational support for professional risk management. Content exclusive for people over 18 years old."
+      disclaimer: "Inverbet is an AI-based statistical analysis platform, not a betting operator. Our signals are probabilistic projections. Use them with responsibility and professional judgment. Only for people over 18 years old."
     },
     install: {
       button: "Install App",
