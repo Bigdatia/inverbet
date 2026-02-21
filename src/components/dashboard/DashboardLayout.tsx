@@ -12,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import InstallAppButton from "@/components/InstallAppButton";
 
 const menuItems = [
   { icon: Radar, label: "Scanner en Vivo", path: "/dashboard" },
@@ -86,6 +87,9 @@ const DashboardLayout = () => {
           })}
         </nav>
 
+        {/* Install App */}
+        <InstallAppButton variant="sidebar" />
+
         {/* Logout */}
         <button
           onClick={handleLogout}
@@ -149,6 +153,8 @@ const DashboardLayout = () => {
             );
           })}
         </nav>
+
+        <InstallAppButton variant="sidebar" />
 
         <button
           onClick={handleLogout}

@@ -152,6 +152,14 @@ export const translations = {
       faq: "FAQ",
       rights: "Todos los derechos reservados.",
       disclaimer: "Juega responsablemente. Tecnología desarrollada para mayores de 18 años. El juego puede ser adictivo, juegue con moderación."
+    },
+    install: {
+      button: "Instalar App",
+      ios_title: "Instalar Inverbet",
+      ios_step1: "Toca el botón Compartir",
+      ios_step2: "Selecciona \"Agregar a Inicio\"",
+      ios_step3: "Toca \"Agregar\"",
+      ios_close: "Entendido",
     }
   },
   en: {
@@ -307,6 +315,14 @@ export const translations = {
       faq: "FAQ",
       rights: "All rights reserved.",
       disclaimer: "Play responsibly. Technology developed for people over 18 years old. Gambling can be addictive, please play responsibly."
+    },
+    install: {
+      button: "Install App",
+      ios_title: "Install Inverbet",
+      ios_step1: "Tap the Share button",
+      ios_step2: "Select \"Add to Home Screen\"",
+      ios_step3: "Tap \"Add\"",
+      ios_close: "Got it",
     }
   },
 };

@@ -5,6 +5,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { Globe, User } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
+import InstallAppButton from "@/components/InstallAppButton";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -32,6 +33,9 @@ const Navbar = () => {
 
         {/* CTA Buttons */}
         <div className="flex items-center gap-3">
+          {/* Install App Button */}
+          <InstallAppButton variant="navbar" />
+
           {/* Language Switcher */}
           <Button
             variant="ghost"
