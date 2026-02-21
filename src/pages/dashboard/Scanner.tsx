@@ -135,7 +135,7 @@ const Scanner = () => {
       {/* Signals Grid */}
       <div className="space-y-8">
         {loading ? (
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <SignalCardSkeleton />
             <SignalCardSkeleton />
             <SignalCardSkeleton />
@@ -157,7 +157,7 @@ const Scanner = () => {
               </div>
 
               {/* Day Signals Grid */}
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {daySignals.map((signal, index) => (
                   <SignalCard 
                     key={signal.id} 
