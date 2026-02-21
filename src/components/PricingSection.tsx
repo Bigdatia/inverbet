@@ -138,6 +138,11 @@ const PricingSection = () => {
                   <QrCode className="h-6 w-6" />
                   <span className="text-xs mt-1 block">Bancolombia QR</span>
                 </div>
+
+                <div className="text-muted-foreground hover:text-foreground transition-colors flex flex-col items-center">
+                  <img src="/bre-b.svg" alt="Bre-B" className="h-5 w-auto brightness-0 invert opacity-60 hover:opacity-100 transition-opacity" />
+                  <span className="text-xs mt-1 block">Bre-B</span>
+                </div>
               </div>
             </div>
           </div>
