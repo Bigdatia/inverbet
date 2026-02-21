@@ -114,7 +114,7 @@ const SolutionSection = () => {
                 {/* Stats Grid */}
                 <div className="grid grid-cols-2 gap-6 mb-8">
                   <div className="bg-secondary rounded-2xl p-6 text-center">
-                    <span className="text-4xl font-display font-bold text-primary">78%</span>
+                    <span className="text-4xl font-display font-bold text-primary">{t.solution.stats.success_rate_value}</span>
                     <p className="text-muted-foreground text-sm mt-2">{t.solution.stats.success_rate}</p>
                   </div>
                   <div className="bg-secondary rounded-2xl p-6 text-center">

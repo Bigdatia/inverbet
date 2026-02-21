@@ -9,9 +9,9 @@ export const translations = {
       title_prefix: "Deja de Apostar.",
       title_highlight: "Empieza a Invertir.",
       subtitle: "La primera plataforma que combina Inteligencia de Datos y Gestión de Riesgo Profesional. No es suerte, es matemática.",
-      cta: "ACCEDER AL SCANNER AHORA",
-      active_users: "+5,000 usuarios activos",
-      success_rate: "Tasa de acierto: 78%",
+      cta: "ACCEDER AHORA",
+      active_users: "+1.600 usuarios activos",
+      success_rate: "Tasa de acierto: 82%",
       app_header_subtitle: "Scanner Pro",
       signal_detected: "Señal Detectada",
       signal_now: "Ahora",
@@ -42,17 +42,17 @@ export const translations = {
     solution: {
       badge: "El Ecosistema Inverbet",
       title_prefix: "Tu",
-      title_highlight: "ventaja injusta",
+      title_highlight: "ventaja",
       title_suffix: "contra las casas de apuestas",
       subtitle: "Mientras otros apuestan a ciegas, tú tendrás acceso a datos en tiempo real y una estrategia probada para maximizar tus ganancias.",
       cards: [
         {
           title: "El Scanner",
-          description: "Nuestro algoritmo analiza miles de cuotas en tiempo real (API-Football & Odds API) para encontrar errores de mercado invisibles al ojo humano.",
+          description: "Nuestro algoritmo analiza miles de cuotas en tiempo real para encontrar errores de mercado invisibles al ojo humano.",
         },
         {
-          title: "La Academy - GRATIS",
-          description: "No solo te damos el pescado. Con tu suscripción, desbloqueas nuestra Estrategia Maestra de Gestión de Capital. Aprende a proteger tu dinero como un profesional.",
+          title: "Academy - GRATIS",
+          description: "Con tu suscripción, desbloqueas nuestra Estrategia Maestra de Gestión de Capital. Aprende a proteger tu dinero como un profesional.",
         }
       ],
       stats: {
@@ -60,6 +60,7 @@ export const translations = {
         header_title: "Esta Semana",
         verified: "Verificado",
         success_rate: "Tasa de Acierto",
+        success_rate_value: "82%",
         signals_issued: "Señales Emitidas",
         roi_avg: "ROI Promedio",
         monitoring: "Monitoreo",
@@ -164,9 +165,9 @@ export const translations = {
       title_prefix: "Stop Betting.",
       title_highlight: "Start Investing.",
       subtitle: "The first platform combining Data Intelligence and Professional Risk Management. It's not luck, it's mathematics.",
-      cta: "ACCESS SCANNER NOW",
-      active_users: "+5,000 active users",
-      success_rate: "Success rate: 78%",
+      cta: "ACCESS NOW",
+      active_users: "+1,600 active users",
+      success_rate: "Success rate: 82%",
       app_header_subtitle: "Scanner Pro",
       signal_detected: "Signal Detected",
       signal_now: "Now",
@@ -197,17 +198,17 @@ export const translations = {
     solution: {
       badge: "The Inverbet Ecosystem",
       title_prefix: "Your",
-      title_highlight: "unfair advantage",
+      title_highlight: "advantage",
       title_suffix: "against bookmakers",
       subtitle: "While others bet blindly, you'll have access to real-time data and a proven strategy to maximize your profits.",
       cards: [
         {
           title: "The Scanner",
-          description: "Our algorithm analyzes thousands of odds in real-time (API-Football & Odds API) to find market errors invisible to the human eye.",
+          description: "Our algorithm analyzes thousands of odds in real-time to find market errors invisible to the human eye.",
         },
         {
-          title: "The Academy - FREE",
-          description: "We don't just give you the fish. With your subscription, you unlock our Master Capital Management Strategy. Learn to protect your money like a pro.",
+          title: "Academy - FREE",
+          description: "With your subscription, you unlock our Master Capital Management Strategy. Learn to protect your money like a pro.",
         }
       ],
       stats: {
@@ -215,6 +216,7 @@ export const translations = {
         header_title: "This Week",
         verified: "Verified",
         success_rate: "Success Rate",
+        success_rate_value: "82%",
         signals_issued: "Signals Issued",
         roi_avg: "Avg ROI",
         monitoring: "Monitoring",
