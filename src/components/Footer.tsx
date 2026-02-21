@@ -44,7 +44,7 @@ const Footer = () => {
           {/* Bottom */}
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
             <p>© 2026 Inverbet. {t.footer.rights}</p>
-            <p className="text-center md:text-right max-w-md">
+            <p className="text-center md:text-right max-w-2xl leading-relaxed">
               {t.footer.disclaimer}
             </p>
           </div>
